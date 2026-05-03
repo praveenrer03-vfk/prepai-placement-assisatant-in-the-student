@@ -262,7 +262,7 @@ export default function Profile() {
     
     if (token && userId) {
       try {
-        const response = await fetch(`http://localhost:5000/api/user/profile/${userId}/photo`, {
+        const response = await fetch(`https://prepai-placement-assisatant-in-the.onrender.com/api/user/profile/${userId}/photo`, {
           method: "DELETE",
           headers: {
             "Authorization": `Bearer ${token}`

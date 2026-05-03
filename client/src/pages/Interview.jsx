@@ -204,7 +204,7 @@ export default function Interview() {
     setFeedback("");
 
     try {
-      const res = await fetch("http://localhost:5000/api/ai/feedback", {
+      const res = await fetch("https://prepai-placement-assisatant-in-the.onrender.com/api/ai/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 

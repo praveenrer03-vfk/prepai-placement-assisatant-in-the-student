@@ -525,7 +525,7 @@ export default function Aptitude() {
     setLoading(true);
     setError(null);
 
-    fetch(`http://localhost:5000/api/aptitude/questions?topic=${selectedTopic.key}`)
+    fetch(`https://prepai-placement-assisatant-in-the.onrender.com/api/aptitude/questions?topic=${selectedTopic.key}`)
       .then(res => {
         if (!res.ok) throw new Error("Failed to fetch questions");
         return res.json();
