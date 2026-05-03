@@ -36,7 +36,7 @@ export default function Profile() {
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/user/profile/${userId}`, {
+      const response = await fetch(`https://prepai-placement-assisatant-in-the.onrender.com/api/user/profile/${userId}`, {
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
@@ -132,7 +132,7 @@ export default function Profile() {
       
       if (token && userId) {
         // Save to database
-        const response = await fetch(`http://localhost:5000/api/user/profile/${userId}`, {
+        const response = await fetch(`https://prepai-placement-assisatant-in-the.onrender.com/api/user/profile/${userId}`, {
           method: "PUT",
           headers: {
             "Authorization": `Bearer ${token}`,
@@ -186,7 +186,7 @@ export default function Profile() {
         
         if (token && userId) {
           try {
-            const response = await fetch(`http://localhost:5000/api/user/profile/${userId}/photo`, {
+            const response = await fetch(`https://prepai-placement-assisatant-in-the.onrender.com/api/user/profile/${userId}/photo`, {
               method: "PUT",
               headers: {
                 "Authorization": `Bearer ${token}`,
