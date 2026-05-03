@@ -1,4 +1,6 @@
+cat > netlify.toml << 'EOF'
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+EOF

@@ -8,7 +8,12 @@ dotenv.config();
 
 // ─── EXPRESS APP ────────────────────────
 const app = express();
-app.use(cors());
+
+// ─── CORS FIX ───────────────────────────
+app.use(cors({
+  origin: "https://your-netlify-site.netlify.app"
+}));
+
 app.use(express.json());
 
 // ─── MONGODB CONNECTION ─────────────────
@@ -46,10 +51,7 @@ app.post("/auth/register", async (req, res) => {
 
   const user = await User.create({ name, email, password });
 
-  res.status(201).json({
-    message: "Registered successfully",
-    user
-  });
+  res.status(201).json({ message: "Registered successfully", user });
 });
 
 // ─── LOGIN ──────────────────────────────
@@ -61,10 +63,7 @@ app.post("/auth/login", async (req, res) => {
   if (!user)
     return res.status(401).json({ error: "Invalid credentials" });
 
-  res.json({
-    message: "Login successful",
-    user
-  });
+  res.json({ message: "Login successful", user });
 });
 
 // ─── USERS ──────────────────────────────
@@ -83,11 +82,7 @@ app.get("/questions", async (req, res) => {
 app.post("/questions", async (req, res) => {
   const { question, answer, topic } = req.body;
 
-  const newQuestion = await Question.create({
-    question,
-    answer,
-    topic
-  });
+  const newQuestion = await Question.create({ question, answer, topic });
 
   res.status(201).json(newQuestion);
 });
