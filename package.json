@@ -1,4 +1,10 @@
 {
+  "name": "gops",
+  "version": "1.0.0",
+  "scripts": {
+    "predeploy": "npm run build --prefix client",
+    "deploy": "gh-pages -d client/dist"
+  },
   "devDependencies": {
     "gh-pages": "^6.3.0"
   }

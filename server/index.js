@@ -15,9 +15,7 @@ const app = express();
 
 // MIDDLEWARE
 app.use(cors({
-  origin: "https://your-netlify-site.netlify.app",
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true
+  origin: "https://adventurous-measure.surge.sh"
 }));
 app.use(express.json());
 
