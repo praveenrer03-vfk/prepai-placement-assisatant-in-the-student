@@ -80,74 +80,102 @@ export default function Login() {
   // Input styling
   const inputStyle = (name) => ({
     width: "100%",
-    background: "rgba(255,255,255,0.06)",
+    background: "rgba(255,255,255,0.05)",
     border: `1px solid ${
       focused === name
-        ? "rgba(0,255,163,0.5)"
+        ? "#6366f1"
         : "rgba(255,255,255,0.1)"
     }`,
-    borderRadius: "14px",
-    padding: "14px 16px 14px 45px",
-    color: "white",
+    borderRadius: "12px",
+    padding: "12px 16px 12px 42px",
+    color: "#e2e8f0",
     outline: "none",
-    fontSize: "14px"
+    fontSize: "14px",
+    fontFamily: "'Inter', sans-serif",
+    transition: "all 0.2s ease"
   });
 
   return (
     <div
       style={{
         minHeight: "100vh",
-        background: "#060610",
+        background: "linear-gradient(135deg, #0f0c29, #302b63, #24243e)",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        fontFamily: "sans-serif"
+        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+        padding: "20px"
       }}
     >
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3 }}
         style={{
-          width: "400px",
-          padding: "30px",
-          borderRadius: "20px",
-          background: "rgba(255,255,255,0.05)",
-          backdropFilter: "blur(15px)",
-          boxShadow: "0px 10px 30px rgba(0,0,0,0.4)"
+          width: "100%",
+          maxWidth: "440px",
+          padding: "40px",
+          borderRadius: "24px",
+          background: "rgba(15, 23, 42, 0.8)",
+          backdropFilter: "blur(20px)",
+          boxShadow: "0 25px 45px -12px rgba(0, 0, 0, 0.5)",
+          border: "1px solid rgba(255, 255, 255, 0.1)"
         }}
       >
-        {/* Logo */}
+        {/* Logo Section */}
         <div
           style={{
             display: "flex",
+            flexDirection: "column",
             alignItems: "center",
-            gap: "10px",
-            marginBottom: "25px"
+            gap: "12px",
+            marginBottom: "32px"
           }}
         >
-          <Zap color="#00ffa3" />
-          <h2 style={{ color: "white" }}>PrepAI Login</h2>
+          <div
+            style={{
+              background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+              padding: "12px",
+              borderRadius: "16px",
+              display: "inline-flex"
+            }}
+          >
+            <Zap size={32} color="white" />
+          </div>
+          <h2 style={{ 
+            color: "white", 
+            margin: 0,
+            fontSize: "28px",
+            fontWeight: "700",
+            letterSpacing: "-0.5px"
+          }}>Welcome Back</h2>
+          <p style={{
+            color: "#94a3b8",
+            margin: 0,
+            fontSize: "14px"
+          }}>Sign in to continue to PrepAI</p>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit}>
           
           {/* Email */}
-          <div style={{ position: "relative", marginBottom: "15px" }}>
+          <div style={{ position: "relative", marginBottom: "16px" }}>
             <Mail
-              size={16}
+              size={18}
               style={{
                 position: "absolute",
-                top: "15px",
+                top: "13px",
                 left: "14px",
-                color: "#00ffa3"
+                color: focused === "email" ? "#6366f1" : "#64748b",
+                transition: "color 0.2s ease"
               }}
             />
 
             <input
               type="email"
               name="email"
-              placeholder="Enter email"
+              placeholder="Email address"
               value={form.email}
               onChange={handleChange}
               onFocus={() => setFocused("email")}
@@ -158,21 +186,22 @@ export default function Login() {
           </div>
 
           {/* Password */}
-          <div style={{ position: "relative", marginBottom: "15px" }}>
+          <div style={{ position: "relative", marginBottom: "20px" }}>
             <Lock
-              size={16}
+              size={18}
               style={{
                 position: "absolute",
-                top: "15px",
+                top: "13px",
                 left: "14px",
-                color: "#00ffa3"
+                color: focused === "password" ? "#6366f1" : "#64748b",
+                transition: "color 0.2s ease"
               }}
             />
 
             <input
               type={showPw ? "text" : "password"}
               name="password"
-              placeholder="Enter password"
+              placeholder="Password"
               value={form.password}
               onChange={handleChange}
               onFocus={() => setFocused("password")}
@@ -187,11 +216,14 @@ export default function Login() {
               style={{
                 position: "absolute",
                 right: "12px",
-                top: "13px",
+                top: "12px",
                 background: "none",
                 border: "none",
                 cursor: "pointer",
-                color: "white"
+                color: "#64748b",
+                padding: "4px",
+                display: "flex",
+                alignItems: "center"
               }}
             >
               {showPw ? (
@@ -202,16 +234,40 @@ export default function Login() {
             </button>
           </div>
 
+          {/* Forgot Password Link */}
+          <div style={{
+            textAlign: "right",
+            marginBottom: "24px"
+          }}>
+            <a
+              href="#"
+              onClick={(e) => e.preventDefault()}
+              style={{
+                color: "#8b5cf6",
+                fontSize: "13px",
+                textDecoration: "none",
+                fontWeight: "500"
+              }}
+            >
+              Forgot password?
+            </a>
+          </div>
+
           {/* Error message */}
           <AnimatePresence>
             {error && (
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
                 style={{
-                  color: "#ff4d4d",
-                  marginBottom: "15px",
-                  fontSize: "14px"
+                  color: "#ef4444",
+                  marginBottom: "16px",
+                  fontSize: "13px",
+                  padding: "10px",
+                  background: "rgba(239, 68, 68, 0.1)",
+                  borderRadius: "8px",
+                  textAlign: "center"
                 }}
               >
                 {error}
@@ -220,42 +276,46 @@ export default function Login() {
           </AnimatePresence>
 
           {/* Login Button */}
-          <button
+          <motion.button
             type="submit"
             disabled={loading}
+            whileHover={{ scale: loading ? 1 : 1.02 }}
+            whileTap={{ scale: loading ? 1 : 0.98 }}
             style={{
               width: "100%",
-              padding: "14px",
+              padding: "12px",
               border: "none",
-              borderRadius: "14px",
-              background:
-                "linear-gradient(90deg,#00ffa3,#00c9ff)",
-              color: "#000",
-              fontWeight: "bold",
-              cursor: "pointer",
+              borderRadius: "12px",
+              background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+              color: "white",
+              fontWeight: "600",
+              fontSize: "14px",
+              cursor: loading ? "not-allowed" : "pointer",
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              gap: "8px"
+              gap: "8px",
+              transition: "all 0.2s ease",
+              opacity: loading ? 0.7 : 1
             }}
           >
             {loading ? (
               <>
-                <Loader2 size={18} /> Loading...
+                <Loader2 size={18} className="spin" /> Signing in...
               </>
             ) : (
               <>
-                Login <ArrowRight size={18} />
+                Sign In <ArrowRight size={18} />
               </>
             )}
-          </button>
+          </motion.button>
         </form>
 
-        {/* Register */}
+        {/* Register Link */}
         <p
           style={{
-            color: "white",
-            marginTop: "20px",
+            color: "#94a3b8",
+            marginTop: "24px",
             textAlign: "center",
             fontSize: "14px"
           }}
@@ -264,15 +324,29 @@ export default function Login() {
           <span
             onClick={() => navigate("/register")}
             style={{
-              color: "#00ffa3",
+              color: "#8b5cf6",
               cursor: "pointer",
-              fontWeight: "bold"
+              fontWeight: "600",
+              transition: "color 0.2s ease"
             }}
+            onMouseEnter={(e) => e.target.style.color = "#6366f1"}
+            onMouseLeave={(e) => e.target.style.color = "#8b5cf6"}
           >
-            Register
+            Create account
           </span>
         </p>
       </motion.div>
+
+      {/* Add spinning animation for loader */}
+      <style>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .spin {
+          animation: spin 1s linear infinite;
+        }
+      `}</style>
     </div>
   );
 }
