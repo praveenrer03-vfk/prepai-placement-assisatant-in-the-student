@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
+import jwt from "jsonwebtoken";
 
 // ─── ENV CONFIG ─────────────────────────
 dotenv.config();
@@ -81,7 +82,14 @@ app.post("/api/auth/login", async (req, res) => {
     if (!user)
       return res.status(401).json({ error: "Invalid credentials" });
 
-    res.json({ message: "Login successful", user });
+    // ✅ Generate JWT token
+    const token = jwt.sign(
+      { id: user._id, email: user.email },
+      process.env.JWT_SECRET || "secret123",
+      { expiresIn: "7d" }
+    );
+
+    res.json({ message: "Login successful", token, user });
 
   } catch (err) {
     res.status(500).json({ error: err.message });

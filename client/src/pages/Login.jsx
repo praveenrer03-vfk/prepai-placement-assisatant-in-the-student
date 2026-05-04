@@ -23,12 +23,13 @@ export default function Login() {
         body: JSON.stringify(form),
       });
       const data = await res.json();
-      if (data.token) {
-        localStorage.setItem("token", data.token);
-        navigate("/dashboard");
-      } else {
-        setError(data.message || "Invalid credentials.");
-      }
+      // ✅ New code
+if (data.message === "Login successful") {
+  localStorage.setItem("user", JSON.stringify(data.user));
+  navigate("/dashboard");
+} else {
+  setError(data.error || "Invalid credentials.");
+}
     } catch {
       setError("Unable to connect. Please try again.");
     } finally {
