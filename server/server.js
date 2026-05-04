@@ -9,9 +9,16 @@ dotenv.config();
 // ─── EXPRESS APP ────────────────────────
 const app = express();
 
-// ─── CORS FIX ───────────────────────────
+// ─── CORS ───────────────────────────────
 app.use(cors({
-  origin: "https://your-netlify-site.netlify.app"
+  origin: [
+    'https://prepai-placement-assisatant-in-the-two.vercel.app',
+    'http://localhost:5173',
+    'http://localhost:3000'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json());
@@ -43,59 +50,85 @@ app.get("/", (req, res) => {
 });
 
 // ─── REGISTER ───────────────────────────
-app.post("/auth/register", async (req, res) => {
-  const { name, email, password } = req.body;
+app.post("/api/auth/register", async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
 
-  if (!name || !email || !password)
-    return res.status(400).json({ error: "All fields required" });
+    if (!name || !email || !password)
+      return res.status(400).json({ error: "All fields required" });
 
-  const user = await User.create({ name, email, password });
+    const existingUser = await User.findOne({ email });
+    if (existingUser)
+      return res.status(400).json({ error: "Email already registered" });
 
-  res.status(201).json({ message: "Registered successfully", user });
+    const user = await User.create({ name, email, password });
+    res.status(201).json({ message: "Registered successfully", user });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ─── LOGIN ──────────────────────────────
-app.post("/auth/login", async (req, res) => {
-  const { email, password } = req.body;
+app.post("/api/auth/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-  const user = await User.findOne({ email, password });
+    const user = await User.findOne({ email, password });
 
-  if (!user)
-    return res.status(401).json({ error: "Invalid credentials" });
+    if (!user)
+      return res.status(401).json({ error: "Invalid credentials" });
 
-  res.json({ message: "Login successful", user });
+    res.json({ message: "Login successful", user });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ─── USERS ──────────────────────────────
-app.get("/users", async (req, res) => {
-  const users = await User.find();
-  res.json(users);
+app.get("/api/users", async (req, res) => {
+  try {
+    const users = await User.find();
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ─── QUESTIONS ──────────────────────────
-app.get("/questions", async (req, res) => {
-  const questions = await Question.find();
-  res.json(questions);
+app.get("/api/questions", async (req, res) => {
+  try {
+    const questions = await Question.find();
+    res.json(questions);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ─── ADD QUESTION ───────────────────────
-app.post("/questions", async (req, res) => {
-  const { question, answer, topic } = req.body;
-
-  const newQuestion = await Question.create({ question, answer, topic });
-
-  res.status(201).json(newQuestion);
+app.post("/api/questions", async (req, res) => {
+  try {
+    const { question, answer, topic } = req.body;
+    const newQuestion = await Question.create({ question, answer, topic });
+    res.status(201).json(newQuestion);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ─── SEED DATA ──────────────────────────
-app.get("/seed", async (req, res) => {
-  const data = await Question.create({
-    question: "What is 2% of 20?",
-    answer: "0.4",
-    topic: "percentage"
-  });
-
-  res.json({ message: "Data inserted ✅", data });
+app.get("/api/seed", async (req, res) => {
+  try {
+    const data = await Question.create({
+      question: "What is 2% of 20?",
+      answer: "0.4",
+      topic: "percentage"
+    });
+    res.json({ message: "Data inserted ✅", data });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ─── START SERVER ───────────────────────
