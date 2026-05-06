@@ -5,6 +5,7 @@ import Profile from './pages/Profile';
 import Interview from './pages/Interview';
 import Aptitude from './pages/Aptitude';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import ResumeBuilder from './pages/ResumeBuilder';
 import ErrorBoundary from "./components/ErrorBoundary";
 
@@ -13,6 +14,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/interview" element={<Interview />} />
