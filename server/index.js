@@ -15,9 +15,9 @@ const app = express();
 
 // MIDDLEWARE
 app.use(cors({
-  origin: "https://adventurous-measure.surge.sh"
+  origin: "https://prepai-placement-assisatant-in-the-two.vercel.app",
+  credentials: true
 }));
-app.use(express.json());
 
 // DATABASE
 mongoose
