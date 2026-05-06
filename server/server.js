@@ -8,66 +8,55 @@ dotenv.config();
 
 const app = express();
 
-// Middleware
+/* ---------------- MIDDLEWARE ---------------- */
 app.use(express.json());
 
-app.use(cors({
-  origin: [
-    "https://prepai-placement-assisatant-in-the-two.vercel.app",
-    "http://localhost:5173",
-    "http://localhost:3000"
-  ],
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: [
+      "https://prepai-placement-assisatant-in-the-two.vercel.app",
+      "http://localhost:5173",
+      "http://localhost:3000",
+    ],
+    credentials: true,
+  })
+);
 
-// MongoDB Connection
-mongoose.connect(process.env.MONGO_URI, {
-  dbName: "mydatabase"
-})
-.then(() => {
-  console.log("MongoDB Connected ✅");
-  console.log("DB Name:", mongoose.connection.name);
-})
-.catch((err) => {
-  console.log("MongoDB Error:", err);
-});
-
-// User Schema
+/* ---------------- SCHEMAS ---------------- */
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true
+    required: true,
   },
   email: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
   },
   password: {
     type: String,
-    required: true
-  }
+    required: true,
+  },
 });
 
-// Question Schema
 const questionSchema = new mongoose.Schema({
   question: String,
   options: [String],
   answer: String,
   explanation: String,
-  topic: String
+  topic: String,
 });
 
-// Models
+/* ---------------- MODELS ---------------- */
 const User = mongoose.model("User", userSchema);
 const Question = mongoose.model("Question", questionSchema);
 
-// Home Route
+/* ---------------- HOME ROUTE ---------------- */
 app.get("/", (req, res) => {
-  res.send("Server is running ✅ final fix");
+  res.send("Server is running ✅ Final Fix");
 });
 
-// Register Route
+/* ---------------- REGISTER ---------------- */
 app.post("/api/auth/register", async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -76,29 +65,28 @@ app.post("/api/auth/register", async (req, res) => {
 
     if (existingUser) {
       return res.status(400).json({
-        error: "Email already exists"
+        error: "Email already exists",
       });
     }
 
     const user = await User.create({
       name,
       email,
-      password
+      password,
     });
 
     res.status(201).json({
       message: "Registration successful",
-      user
+      user,
     });
-
   } catch (err) {
     res.status(500).json({
-      error: err.message
+      error: err.message,
     });
   }
 });
 
-// Login Route
+/* ---------------- LOGIN ---------------- */
 app.post("/api/auth/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -107,48 +95,46 @@ app.post("/api/auth/login", async (req, res) => {
 
     if (!user) {
       return res.status(401).json({
-        error: "Invalid credentials"
+        error: "Invalid credentials",
       });
     }
 
     const token = jwt.sign(
       {
         id: user._id,
-        email: user.email
+        email: user.email,
       },
       process.env.JWT_SECRET,
       {
-        expiresIn: "7d"
+        expiresIn: "7d",
       }
     );
 
     res.json({
       message: "Login successful",
       token,
-      user
+      user,
     });
-
   } catch (err) {
     res.status(500).json({
-      error: err.message
+      error: err.message,
     });
   }
 });
 
-// Get all users
+/* ---------------- GET USERS ---------------- */
 app.get("/api/users", async (req, res) => {
   try {
     const users = await User.find();
     res.json(users);
-
   } catch (err) {
     res.status(500).json({
-      error: err.message
+      error: err.message,
     });
   }
 });
 
-// FIXED Aptitude Questions Route
+/* ---------------- GET QUESTIONS ---------------- */
 app.get("/api/aptitude/questions", async (req, res) => {
   try {
     const { topic } = req.query;
@@ -166,17 +152,16 @@ app.get("/api/aptitude/questions", async (req, res) => {
     console.log("Questions found:", questions.length);
 
     res.json(questions);
-
   } catch (err) {
     console.log("Questions Route Error:", err);
 
     res.status(500).json({
-      error: err.message
+      error: err.message,
     });
   }
 });
 
-// Add Question
+/* ---------------- ADD QUESTION ---------------- */
 app.post("/api/questions", async (req, res) => {
   try {
     const { question, options, answer, explanation, topic } = req.body;
@@ -186,19 +171,18 @@ app.post("/api/questions", async (req, res) => {
       options,
       answer,
       explanation,
-      topic
+      topic,
     });
 
     res.status(201).json(newQuestion);
-
   } catch (err) {
     res.status(500).json({
-      error: err.message
+      error: err.message,
     });
   }
 });
 
-// Seed sample question
+/* ---------------- SEED DATA ---------------- */
 app.get("/api/seed", async (req, res) => {
   try {
     const data = await Question.create({
@@ -206,24 +190,38 @@ app.get("/api/seed", async (req, res) => {
       options: ["0.2", "0.4", "2", "4"],
       answer: "0.4",
       explanation: "2% of 20 = (2/100) × 20 = 0.4",
-      topic: "percentage"
+      topic: "percentage",
     });
 
     res.json({
       message: "Sample question inserted ✅",
-      data
+      data,
     });
-
   } catch (err) {
     res.status(500).json({
-      error: err.message
+      error: err.message,
     });
   }
 });
 
-// Server Start
-const PORT = process.env.PORT || 5000;
+/* ---------------- START SERVER AFTER DB CONNECT ---------------- */
+const startServer = async () => {
+  try {
+    await mongoose.connect(process.env.MONGO_URI, {
+      dbName: "mydatabase",
+    });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT} 🚀`);
-});
+    console.log("MongoDB Connected ✅");
+    console.log("DB Name:", mongoose.connection.name);
+
+    const PORT = process.env.PORT || 5000;
+
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT} 🚀`);
+    });
+  } catch (err) {
+    console.log("MongoDB Connection Error:", err);
+  }
+};
+
+startServer();
