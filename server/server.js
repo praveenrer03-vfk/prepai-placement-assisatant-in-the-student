@@ -139,6 +139,24 @@ app.post("/api/auth/login", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+/* ---------------- DEBUG LOGIN ---------------- */
+app.post("/api/debug-login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    const user = await User.findOne({ email });
+    
+    res.json({
+      step1_received: { email, password },
+      step2_userFound: !!user,
+      step3_storedPassword: user ? user.password : null,
+      step4_match: user ? user.password === password : false,
+      step5_jwtSecret: !!process.env.JWT_SECRET,
+    });
+  } catch (err) {
+    res.json({ error: err.message });
+  }
+});
 
 /* ---------------- GET USERS (protected) ---------------- */
 app.get("/api/users", authenticate, async (req, res) => {
