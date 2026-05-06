@@ -64,7 +64,7 @@ const Question = mongoose.model("Question", questionSchema);
 
 // Home Route
 app.get("/", (req, res) => {
-  res.send("Server is running ✅");
+  res.send("Server is running ✅ final fix");
 });
 
 // Register Route
