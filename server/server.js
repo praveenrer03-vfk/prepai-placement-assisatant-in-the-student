@@ -153,17 +153,23 @@ app.get("/api/aptitude/questions", async (req, res) => {
   try {
     const { topic } = req.query;
 
+    console.log("Requested topic:", topic);
+
     let questions;
 
     if (topic) {
-      questions = await Question.find({ topic });
+      questions = await Question.find({ topic }).lean();
     } else {
-      questions = await Question.find();
+      questions = await Question.find().lean();
     }
+
+    console.log("Questions found:", questions.length);
 
     res.json(questions);
 
   } catch (err) {
+    console.log("Questions Route Error:", err);
+
     res.status(500).json({
       error: err.message
     });
