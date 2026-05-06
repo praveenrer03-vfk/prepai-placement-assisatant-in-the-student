@@ -3,7 +3,6 @@ import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
 
 dotenv.config();
 
@@ -91,12 +90,10 @@ app.post("/api/auth/register", async (req, res) => {
       return res.status(400).json({ error: "Email already exists" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
     const user = await User.create({
       name,
       email,
-      password: hashedPassword,
+      password, // stored as plain text
     });
 
     res.status(201).json({
@@ -123,9 +120,7 @@ app.post("/api/auth/login", async (req, res) => {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
-
-    if (!isMatch) {
+    if (user.password !== password) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
