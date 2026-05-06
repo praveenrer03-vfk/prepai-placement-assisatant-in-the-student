@@ -225,3 +225,32 @@ const startServer = async () => {
 };
 
 startServer();
+await mongoose.connect(process.env.MONGO_URI, {
+  dbName: "mydatabase",
+  serverSelectionTimeoutMS: 30000
+});
+console.log("Mongo Ready State:", mongoose.connection.readyState);
+console.log("Connected Host:", mongoose.connection.host);
+console.log("Connected DB:", mongoose.connection.name);
+const startServer = async () => {
+  try {
+    await mongoose.connect(process.env.MONGO_URI, {
+      dbName: "mydatabase",
+      serverSelectionTimeoutMS: 30000
+    });
+
+    console.log("MongoDB Connected ✅");
+    console.log("Mongo Ready State:", mongoose.connection.readyState);
+    console.log("Connected Host:", mongoose.connection.host);
+    console.log("Connected DB:", mongoose.connection.name);
+
+    const PORT = process.env.PORT || 5000;
+
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT} 🚀`);
+    });
+
+  } catch (err) {
+    console.log("MongoDB Connection Error:", err);
+  }
+};
