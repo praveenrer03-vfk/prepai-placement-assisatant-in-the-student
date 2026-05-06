@@ -86,7 +86,6 @@ const globalStyles = `
     z-index: 1;
   }
 
-  /* ── TOPIC SELECTION ── */
   .topic-screen-header {
     text-align: center;
     margin-bottom: 32px;
@@ -187,7 +186,6 @@ const globalStyles = `
     transform: translateY(-1px);
   }
 
-  /* ── QUIZ SCREEN ── */
   .quiz-header {
     display: flex;
     justify-content: space-between;
@@ -392,7 +390,6 @@ const globalStyles = `
     transform: translateY(-1px);
   }
 
-  /* Result screen */
   .result-card { text-align: center; }
   .result-emoji { font-size: 64px; margin-bottom: 20px; display: block; }
   .result-title {
@@ -464,7 +461,6 @@ const globalStyles = `
   }
   .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 12px 32px rgba(0,212,184,0.35); }
 
-  /* Loading */
   .loading-wrap {
     min-height: 100vh;
     display: flex;
@@ -495,12 +491,10 @@ const globalStyles = `
 const LETTERS = ["A", "B", "C", "D"];
 
 export default function Aptitude() {
-  // ── Topic selection state ──
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [quizStarted, setQuizStarted] = useState(false);
-  const [fetchTrigger, setFetchTrigger] = useState(0); // ✅ increment to re-fetch
+  const [fetchTrigger, setFetchTrigger] = useState(0);
 
-  // ── Quiz state ──
   const [questions, setQuestions] = useState([]);
   const [current, setCurrent] = useState(0);
   const [score, setScore] = useState(0);
@@ -511,6 +505,12 @@ export default function Aptitude() {
 
   const navigate = useNavigate();
 
+  // ✅ Redirect if no token
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) navigate("/");
+  }, [navigate]);
+
   useEffect(() => {
     const style = document.createElement("style");
     style.textContent = globalStyles;
@@ -518,15 +518,27 @@ export default function Aptitude() {
     return () => document.head.removeChild(style);
   }, []);
 
-  // Fetch questions — re-runs whenever fetchTrigger increments
+  // ✅ Fetch with Authorization header
   useEffect(() => {
     if (!quizStarted || !selectedTopic || fetchTrigger === 0) return;
 
     setLoading(true);
     setError(null);
 
-    fetch(`https://prepai-placement-assisatant-in-the.onrender.com/api/aptitude/questions?topic=${selectedTopic.key}`)
+    const token = localStorage.getItem("token");
+
+    fetch(`https://prepai-placement-assisatant-in-the.onrender.com/api/aptitude/questions?topic=${selectedTopic.key}`, {
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    })
       .then(res => {
+        if (res.status === 401) {
+          localStorage.clear();
+          navigate("/");
+          throw new Error("Session expired. Please login again.");
+        }
         if (!res.ok) throw new Error("Failed to fetch questions");
         return res.json();
       })
@@ -536,7 +548,7 @@ export default function Aptitude() {
       })
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
-  }, [fetchTrigger]); // only fetchTrigger drives re-fetch
+  }, [fetchTrigger]);
 
   const startQuiz = () => {
     if (!selectedTopic) return;
@@ -547,7 +559,7 @@ export default function Aptitude() {
     setQuestions([]);
     setError(null);
     setQuizStarted(true);
-    setFetchTrigger(prev => prev + 1); // ✅ trigger fetch with current selectedTopic
+    setFetchTrigger(prev => prev + 1);
   };
 
   const resetToTopics = () => {
@@ -569,7 +581,7 @@ export default function Aptitude() {
     setFinished(false);
     setQuestions([]);
     setError(null);
-    setFetchTrigger(prev => prev + 1); // ✅ re-fetch same topic reliably
+    setFetchTrigger(prev => prev + 1);
   };
 
   const handleAnswer = (opt) => {
@@ -597,11 +609,8 @@ export default function Aptitude() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, ease: "easeOut" }}
         >
-          {/* Header */}
           <div className="quiz-header">
-            <button className="back-btn" onClick={() => navigate("/dashboard")}>
-              ← Back
-            </button>
+            <button className="back-btn" onClick={() => navigate("/dashboard")}>← Back</button>
           </div>
 
           <div className="topic-screen-header">
@@ -685,12 +694,10 @@ export default function Aptitude() {
           <span className="result-emoji">🏆</span>
           <h2 className="result-title">Quiz Complete!</h2>
           <p className="result-sub">Here's how you performed on {selectedTopic.label}</p>
-
           <div className="score-display">
             <span className="score-num">{score}</span>
             <span className="score-denom"> / {questions.length}</span>
           </div>
-
           <div className="result-actions">
             <button className="btn-secondary" onClick={resetToTopics}>← Topics</button>
             <button className="btn-secondary" onClick={resetQuiz}>↺ Retry</button>
@@ -715,15 +722,11 @@ export default function Aptitude() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, ease: "easeOut" }}
       >
-        {/* HEADER */}
         <div className="quiz-header">
-          <button className="back-btn" onClick={resetToTopics}>
-            ← Topics
-          </button>
+          <button className="back-btn" onClick={resetToTopics}>← Topics</button>
           <div className="score-badge">⭐ {score} pts</div>
         </div>
 
-        {/* PROGRESS */}
         <div className="progress-wrap">
           <div className="progress-meta">
             <span>Progress</span>
@@ -734,10 +737,8 @@ export default function Aptitude() {
           </div>
         </div>
 
-        {/* TOPIC CHIP */}
         <div className="topic-chip">{selectedTopic.icon} {selectedTopic.label}</div>
 
-        {/* QUESTION */}
         <p className="question-label">Question {current + 1}</p>
         <AnimatePresence mode="wait">
           <motion.h2
@@ -752,19 +753,16 @@ export default function Aptitude() {
           </motion.h2>
         </AnimatePresence>
 
-        {/* OPTIONS */}
         <div className="options-grid">
           {q.options.map((opt, i) => {
             const isCorrect = opt === q.answer;
             const isSelected = opt === selected;
-
             let cls = "option-item";
             if (selected !== null) {
               cls += " disabled";
               if (isCorrect) cls += " correct";
               else if (isSelected) cls += " wrong";
             }
-
             return (
               <motion.div
                 key={i}
@@ -782,7 +780,6 @@ export default function Aptitude() {
           })}
         </div>
 
-        {/* EXPLANATION */}
         <AnimatePresence>
           {selected !== null && (
             <motion.div
@@ -797,7 +794,6 @@ export default function Aptitude() {
           )}
         </AnimatePresence>
 
-        {/* NEXT */}
         <AnimatePresence>
           {selected !== null && (
             <motion.button
