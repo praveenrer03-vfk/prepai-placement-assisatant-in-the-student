@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Loader2,
@@ -8,44 +8,34 @@ import {
   Eye,
   EyeOff,
   ArrowRight,
-  Fingerprint,
-  Shield,
-  Star,
-  Activity
+  Sparkles,
+  Globe,
+  TrendingUp,
+  Award,
+  ChevronRight
 } from "lucide-react";
-import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
-export default function Login() {
+export default function LoginModern() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPw, setShowPw] = useState(false);
-  const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
-  const [ripples, setRipples] = useState([]);
-  const containerRef = useRef(null);
+  const [activeFeature, setActiveFeature] = useState(0);
 
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
+  const features = [
+    { icon: <TrendingUp size={24} />, title: "Smart Analytics", desc: "AI-driven insights" },
+    { icon: <Globe size={24} />, title: "Global Network", desc: "Connect worldwide" },
+    { icon: <Award size={24} />, title: "Certified Courses", desc: "Industry recognized" }
+  ];
 
   useEffect(() => {
-    const handleMouseMove = (e) => {
-      mouseX.set(e.clientX);
-      mouseY.set(e.clientY);
-      setCursorPosition({ x: e.clientX, y: e.clientY });
-    };
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+    const interval = setInterval(() => {
+      setActiveFeature((prev) => (prev + 1) % features.length);
+    }, 3000);
+    return () => clearInterval(interval);
   }, []);
-
-  const handleRipple = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const id = Date.now();
-    setRipples(prev => [...prev, { id, x, y }]);
-    setTimeout(() => setRipples(prev => prev.filter(r => r.id !== id)), 1000);
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -78,510 +68,481 @@ export default function Login() {
 
   return (
     <div
-      ref={containerRef}
       style={{
         minHeight: "100vh",
-        background: "#000000",
+        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
         display: "flex",
         position: "relative",
         overflow: "hidden",
-        fontFamily: "'SF Pro Display', 'Inter', system-ui, sans-serif"
+        fontFamily: "'Inter', 'Poppins', system-ui, sans-serif"
       }}
     >
-      {/* Animated Grid Background */}
-      <svg style={{ position: "absolute", width: "100%", height: "100%", opacity: 0.1 }}>
-        <defs>
-          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#00ff88" strokeWidth="0.5"/>
-          </pattern>
-          <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#00ff88" stopOpacity="0.8"/>
-            <stop offset="100%" stopColor="#00d4ff" stopOpacity="0.8"/>
-          </linearGradient>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#grid)" />
-      </svg>
-
-      {/* 3D Floating Geometric Shapes */}
-      {[...Array(12)].map((_, i) => (
-        <motion.div
-          key={i}
-          initial={{ scale: 0, rotate: 0 }}
-          animate={{
-            scale: [1, 1.2, 1],
-            rotate: [0, 180, 360],
-            x: [0, Math.sin(i) * 100, 0],
-            y: [0, Math.cos(i) * 100, 0]
-          }}
-          transition={{
-            duration: 10 + i * 2,
-            repeat: Infinity,
-            ease: "linear"
-          }}
-          style={{
-            position: "absolute",
-            top: `${Math.random() * 100}%`,
-            left: `${Math.random() * 100}%`,
-            width: `${30 + i * 5}px`,
-            height: `${30 + i * 5}px`,
-            background: `linear-gradient(135deg, #00ff88, #00d4ff)`,
-            opacity: 0.1,
-            borderRadius: i % 2 === 0 ? "50%" : "30%",
-            filter: "blur(20px)",
-            pointerEvents: "none"
-          }}
-        />
-      ))}
-
-      {/* Dynamic Cursor Light */}
+      {/* Animated Background Circles */}
       <motion.div
+        animate={{
+          scale: [1, 1.2, 1],
+          x: [0, 100, 0],
+          y: [0, 50, 0]
+        }}
+        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
         style={{
-          position: "fixed",
-          width: "400px",
-          height: "400px",
-          background: "radial-gradient(circle, rgba(0,255,136,0.15), transparent)",
+          position: "absolute",
+          top: "-20%",
+          right: "-10%",
+          width: "500px",
+          height: "500px",
+          background: "radial-gradient(circle, rgba(255,255,255,0.1), transparent)",
           borderRadius: "50%",
-          left: useTransform(mouseX, x => x - 200),
-          top: useTransform(mouseY, y => y - 200),
-          pointerEvents: "none",
-          zIndex: 0
+          pointerEvents: "none"
+        }}
+      />
+      <motion.div
+        animate={{
+          scale: [1.2, 1, 1.2],
+          x: [0, -100, 0],
+          y: [0, -50, 0]
+        }}
+        transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+        style={{
+          position: "absolute",
+          bottom: "-20%",
+          left: "-10%",
+          width: "600px",
+          height: "600px",
+          background: "radial-gradient(circle, rgba(255,255,255,0.08), transparent)",
+          borderRadius: "50%",
+          pointerEvents: "none"
         }}
       />
 
-      {/* Main Content Split Screen */}
-      <div style={{ display: "flex", width: "100%", zIndex: 1 }}>
+      {/* Main Container */}
+      <div style={{ display: "flex", width: "100%", zIndex: 1, alignItems: "center", justifyContent: "center", padding: "20px" }}>
         
-        {/* Left Side - Interactive Hero Section */}
+        {/* Glassmorphism Card */}
         <motion.div
-          initial={{ x: -100, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ duration: 0.8, type: "spring" }}
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
           style={{
-            flex: 1,
-            background: "linear-gradient(135deg, rgba(0,0,0,0.95), rgba(0,20,10,0.98))",
             display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            padding: "60px",
-            position: "relative",
-            overflow: "hidden"
-          }}
-        >
-          {/* Animated Stats Cards */}
-          <motion.div
-            animate={{ y: [0, -10, 0] }}
-            transition={{ duration: 3, repeat: Infinity }}
-            style={{
-              position: "absolute",
-              top: "20%",
-              right: "10%",
-              background: "rgba(0,255,136,0.1)",
-              backdropFilter: "blur(10px)",
-              padding: "20px",
-              borderRadius: "20px",
-              border: "1px solid rgba(0,255,136,0.3)"
-            }}
-          >
-            <div style={{ color: "#00ff88", fontSize: "32px", fontWeight: "bold" }}>98%</div>
-            <div style={{ color: "white", fontSize: "12px" }}>Success Rate</div>
-          </motion.div>
-
-          <motion.div
-            animate={{ y: [0, 10, 0] }}
-            transition={{ duration: 4, repeat: Infinity }}
-            style={{
-              position: "absolute",
-              bottom: "20%",
-              left: "10%",
-              background: "rgba(0,255,136,0.1)",
-              backdropFilter: "blur(10px)",
-              padding: "20px",
-              borderRadius: "20px",
-              border: "1px solid rgba(0,255,136,0.3)"
-            }}
-          >
-            <div style={{ color: "#00ff88", fontSize: "32px", fontWeight: "bold" }}>50K+</div>
-            <div style={{ color: "white", fontSize: "12px" }}>Active Users</div>
-          </motion.div>
-
-          <motion.h1
-            initial={{ scale: 0.5, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.2, type: "spring" }}
-            style={{
-              fontSize: "72px",
-              fontWeight: "900",
-              background: "linear-gradient(135deg, #00ff88, #00d4ff)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              marginBottom: "20px",
-              lineHeight: 1.1
-            }}
-          >
-            PrepAI
-            <br />
-            Intelligence
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            style={{ color: "#888", fontSize: "18px", marginBottom: "40px", maxWidth: "80%" }}
-          >
-            Experience the future of AI-powered placement assistance with cutting-edge technology
-          </motion.p>
-
-          {/* Feature List with Animations */}
-          {[
-            { icon: <Star size={20} />, text: "AI-Powered Career Guidance" },
-            { icon: <Activity size={20} />, text: "Real-time Performance Analytics" },
-            { icon: <Shield size={20} />, text: "Enterprise-Grade Security" }
-          ].map((feature, i) => (
-            <motion.div
-              key={i}
-              initial={{ x: -50, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.6 + i * 0.1 }}
-              whileHover={{ x: 10 }}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "15px",
-                marginBottom: "20px",
-                color: "white"
-              }}
-            >
-              <div style={{ color: "#00ff88" }}>{feature.icon}</div>
-              <span>{feature.text}</span>
-            </motion.div>
-          ))}
-
-          {/* Animated Progress Bar */}
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: "80%" }}
-            transition={{ delay: 1, duration: 1 }}
-            style={{
-              marginTop: "60px",
-              height: "2px",
-              background: "rgba(255,255,255,0.1)",
-              borderRadius: "2px",
-              overflow: "hidden"
-            }}
-          >
-            <motion.div
-              animate={{ x: ["0%", "100%"] }}
-              transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
-              style={{
-                width: "30%",
-                height: "100%",
-                background: "linear-gradient(90deg, #00ff88, #00d4ff)"
-              }}
-            />
-          </motion.div>
-        </motion.div>
-
-        {/* Right Side - Login Form */}
-        <motion.div
-          initial={{ x: 100, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ duration: 0.8, type: "spring" }}
-          style={{
-            flex: 1,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            background: "rgba(0,0,0,0.8)",
+            maxWidth: "1200px",
+            width: "100%",
+            background: "rgba(255, 255, 255, 0.1)",
             backdropFilter: "blur(20px)",
-            position: "relative"
+            borderRadius: "40px",
+            overflow: "hidden",
+            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+            border: "1px solid rgba(255, 255, 255, 0.2)"
           }}
         >
-          {/* Ripple Effect Canvas */}
-          <div
-            onClick={handleRipple}
-            style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              width: "100%",
-              height: "100%",
-              pointerEvents: "none",
-              zIndex: 10
-            }}
-          >
-            {ripples.map(ripple => (
-              <motion.div
-                key={ripple.id}
-                initial={{ scale: 0, opacity: 0.8 }}
-                animate={{ scale: 4, opacity: 0 }}
-                transition={{ duration: 1 }}
-                style={{
-                  position: "fixed",
-                  left: ripple.x,
-                  top: ripple.y,
-                  width: "60px",
-                  height: "60px",
-                  border: "2px solid #00ff88",
-                  borderRadius: "50%",
-                  transform: "translate(-50%, -50%)"
-                }}
-              />
-            ))}
-          </div>
-
+          
+          {/* Left Side - Brand Section */}
           <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.2, type: "spring" }}
+            initial={{ x: -50, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
             style={{
-              width: "100%",
-              maxWidth: "450px",
-              padding: "50px"
+              flex: 1.2,
+              padding: "60px",
+              background: "linear-gradient(135deg, rgba(0,0,0,0.4), rgba(0,0,0,0.2))",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between"
             }}
           >
-            {/* Neon Logo with Pulse */}
-            <motion.div
-              animate={{
-                boxShadow: [
-                  "0 0 0px #00ff88",
-                  "0 0 30px #00ff88",
-                  "0 0 0px #00ff88"
-                ]
-              }}
-              transition={{ duration: 2, repeat: Infinity }}
-              style={{
-                width: "70px",
-                height: "70px",
-                background: "linear-gradient(135deg, #00ff88, #00d4ff)",
-                borderRadius: "20px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: "30px"
-              }}
-            >
-              <Zap size={35} color="black" />
-            </motion.div>
-
-            <h2 style={{ color: "white", fontSize: "32px", marginBottom: "10px" }}>
-              Welcome Back
-            </h2>
-            <p style={{ color: "#666", marginBottom: "40px" }}>
-              Sign in to access your dashboard
-            </p>
-
-            <form onSubmit={handleSubmit}>
-              {/* Email Field */}
+            <div>
+              {/* Logo */}
               <motion.div
-                initial={{ x: -30, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
+                whileHover={{ scale: 1.05 }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  marginBottom: "60px"
+                }}
+              >
+                <div style={{
+                  width: "45px",
+                  height: "45px",
+                  background: "white",
+                  borderRadius: "12px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center"
+                }}>
+                  <Zap size={28} color="#667eea" />
+                </div>
+                <h2 style={{ color: "white", fontSize: "28px", fontWeight: "700", margin: 0 }}>
+                  PrepAI
+                </h2>
+              </motion.div>
+
+              {/* Main Message */}
+              <motion.h1
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
                 transition={{ delay: 0.4 }}
-                style={{ marginBottom: "25px" }}
+                style={{
+                  color: "white",
+                  fontSize: "48px",
+                  fontWeight: "800",
+                  lineHeight: 1.2,
+                  marginBottom: "24px"
+                }}
               >
-                <label style={{ color: "#00ff88", fontSize: "12px", fontWeight: "600", marginBottom: "8px", display: "block" }}>
-                  EMAIL ADDRESS
-                </label>
-                <div style={{ position: "relative" }}>
-                  <Mail size={18} style={{ position: "absolute", left: "15px", top: "50%", transform: "translateY(-50%)", color: "#00ff88" }} />
-                  <input
-                    type="email"
-                    name="email"
-                    value={form.email}
-                    onChange={handleChange}
-                    required
-                    style={{
-                      width: "100%",
-                      padding: "15px 15px 15px 45px",
-                      background: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(0,255,136,0.3)",
-                      borderRadius: "12px",
-                      color: "white",
-                      outline: "none",
-                      fontSize: "14px",
-                      transition: "all 0.3s"
-                    }}
-                    onFocus={(e) => e.target.style.borderColor = "#00ff88"}
-                    onBlur={(e) => e.target.style.borderColor = "rgba(0,255,136,0.3)"}
-                  />
-                </div>
-              </motion.div>
+                Welcome to the
+                <br />
+                Future of Learning
+              </motion.h1>
 
-              {/* Password Field */}
-              <motion.div
-                initial={{ x: -30, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 0.5 }}
-                style={{ marginBottom: "20px" }}
-              >
-                <label style={{ color: "#00ff88", fontSize: "12px", fontWeight: "600", marginBottom: "8px", display: "block" }}>
-                  PASSWORD
-                </label>
-                <div style={{ position: "relative" }}>
-                  <Lock size={18} style={{ position: "absolute", left: "15px", top: "50%", transform: "translateY(-50%)", color: "#00ff88" }} />
-                  <input
-                    type={showPw ? "text" : "password"}
-                    name="password"
-                    value={form.password}
-                    onChange={handleChange}
-                    required
-                    style={{
-                      width: "100%",
-                      padding: "15px 45px 15px 45px",
-                      background: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(0,255,136,0.3)",
-                      borderRadius: "12px",
-                      color: "white",
-                      outline: "none",
-                      fontSize: "14px"
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPw(!showPw)}
-                    style={{
-                      position: "absolute",
-                      right: "15px",
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      background: "none",
-                      border: "none",
-                      color: "#888",
-                      cursor: "pointer"
-                    }}
-                  >
-                    {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-              </motion.div>
-
-              {/* Biometric Option */}
-              <motion.div
+              <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.6 }}
                 style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: "30px"
+                  color: "rgba(255,255,255,0.8)",
+                  fontSize: "16px",
+                  lineHeight: 1.6,
+                  marginBottom: "50px"
                 }}
               >
-                <label style={{ display: "flex", alignItems: "center", gap: "8px", color: "#888", fontSize: "12px" }}>
-                  <input type="checkbox" style={{ accentColor: "#00ff88" }} />
-                  Remember me
-                </label>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  type="button"
-                  style={{
-                    background: "rgba(0,255,136,0.1)",
-                    border: "1px solid rgba(0,255,136,0.3)",
-                    padding: "8px 15px",
-                    borderRadius: "20px",
-                    color: "#00ff88",
-                    fontSize: "12px",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px"
-                  }}
-                >
-                  <Fingerprint size={14} />
-                  Use Biometric
-                </motion.button>
-              </motion.div>
+                Join thousands of students who have accelerated their careers with our AI-powered platform.
+              </motion.p>
 
-              {/* Error Message */}
-              <AnimatePresence>
-                {error && (
+              {/* Rotating Features */}
+              <div style={{ marginBottom: "50px" }}>
+                <AnimatePresence mode="wait">
                   <motion.div
-                    initial={{ opacity: 0, y: -10 }}
+                    key={activeFeature}
+                    initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.5 }}
                     style={{
-                      background: "rgba(255,0,0,0.1)",
-                      border: "1px solid rgba(255,0,0,0.3)",
-                      padding: "12px",
-                      borderRadius: "8px",
-                      color: "#ff4444",
-                      fontSize: "12px",
-                      marginBottom: "20px",
-                      textAlign: "center"
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "16px",
+                      padding: "16px",
+                      background: "rgba(255,255,255,0.1)",
+                      borderRadius: "16px",
+                      border: "1px solid rgba(255,255,255,0.2)"
                     }}
                   >
-                    {error}
+                    <div style={{ color: "white" }}>{features[activeFeature].icon}</div>
+                    <div>
+                      <h4 style={{ color: "white", margin: 0, fontSize: "18px" }}>
+                        {features[activeFeature].title}
+                      </h4>
+                      <p style={{ color: "rgba(255,255,255,0.7)", margin: "5px 0 0", fontSize: "14px" }}>
+                        {features[activeFeature].desc}
+                      </p>
+                    </div>
                   </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Submit Button */}
-              <motion.button
-                type="submit"
-                disabled={loading}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                style={{
-                  width: "100%",
-                  padding: "16px",
-                  background: "linear-gradient(135deg, #00ff88, #00d4ff)",
-                  border: "none",
-                  borderRadius: "12px",
-                  color: "black",
-                  fontWeight: "bold",
-                  fontSize: "16px",
-                  cursor: loading ? "not-allowed" : "pointer",
-                  position: "relative",
-                  overflow: "hidden"
-                }}
-              >
-                {loading ? (
-                  <Loader2 size={20} style={{ animation: "spin 1s linear infinite", margin: "0 auto" }} />
-                ) : (
-                  "Sign In"
-                )}
-              </motion.button>
-
-              {/* Divider */}
-              <div style={{ display: "flex", alignItems: "center", margin: "30px 0", gap: "15px" }}>
-                <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.1)" }} />
-                <span style={{ color: "#666", fontSize: "12px" }}>OR</span>
-                <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.1)" }} />
+                </AnimatePresence>
               </div>
 
-              {/* Social Login */}
-              <div style={{ display: "flex", gap: "15px" }}>
-                {["Google", "GitHub", "LinkedIn"].map((platform) => (
-                  <motion.button
-                    key={platform}
-                    whileHover={{ y: -5 }}
-                    style={{
-                      flex: 1,
-                      padding: "12px",
-                      background: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(0,255,136,0.3)",
-                      borderRadius: "10px",
-                      color: "white",
-                      fontSize: "13px",
-                      cursor: "pointer"
-                    }}
+              {/* Stats */}
+              <div style={{ display: "flex", gap: "30px" }}>
+                {[
+                  { value: "50K+", label: "Active Students" },
+                  { value: "98%", label: "Success Rate" },
+                  { value: "24/7", label: "Support" }
+                ].map((stat, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.8 + i * 0.1 }}
                   >
-                    {platform}
-                  </motion.button>
+                    <h3 style={{ color: "white", fontSize: "28px", margin: 0, fontWeight: "700" }}>
+                      {stat.value}
+                    </h3>
+                    <p style={{ color: "rgba(255,255,255,0.6)", margin: "5px 0 0", fontSize: "12px" }}>
+                      {stat.label}
+                    </p>
+                  </motion.div>
                 ))}
               </div>
+            </div>
 
-              {/* Register Link */}
-              <p style={{ textAlign: "center", color: "#666", marginTop: "30px", fontSize: "13px" }}>
-                Don't have an account?{" "}
-                <span
-                  onClick={() => navigate("/register")}
-                  style={{ color: "#00ff88", cursor: "pointer", fontWeight: "bold" }}
+            {/* Trust Badges */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1 }}
+              style={{
+                display: "flex",
+                gap: "20px",
+                marginTop: "60px",
+                paddingTop: "30px",
+                borderTop: "1px solid rgba(255,255,255,0.1)"
+              }}
+            >
+              {["Trustpilot", "G2", "Capterra"].map((badge) => (
+                <div key={badge} style={{ color: "rgba(255,255,255,0.5)", fontSize: "12px" }}>
+                  ★ {badge}
+                </div>
+              ))}
+            </motion.div>
+          </motion.div>
+
+          {/* Right Side - Login Form */}
+          <motion.div
+            initial={{ x: 50, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            style={{
+              flex: 1,
+              padding: "60px",
+              background: "rgba(255, 255, 255, 0.95)",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center"
+            }}
+          >
+            <div style={{ maxWidth: "400px", margin: "0 auto", width: "100%" }}>
+              {/* Header */}
+              <div style={{ marginBottom: "40px" }}>
+                <h2 style={{ fontSize: "32px", fontWeight: "700", color: "#333", marginBottom: "10px" }}>
+                  Sign In
+                </h2>
+                <p style={{ color: "#666", fontSize: "14px" }}>
+                  Welcome back! Please enter your details
+                </p>
+              </div>
+
+              <form onSubmit={handleSubmit}>
+                {/* Email Field */}
+                <div style={{ marginBottom: "24px" }}>
+                  <label style={{ 
+                    display: "block", 
+                    marginBottom: "8px", 
+                    color: "#333", 
+                    fontSize: "13px", 
+                    fontWeight: "600" 
+                  }}>
+                    Email Address
+                  </label>
+                  <div style={{ position: "relative" }}>
+                    <Mail size={18} style={{ 
+                      position: "absolute", 
+                      left: "16px", 
+                      top: "50%", 
+                      transform: "translateY(-50%)", 
+                      color: "#999" 
+                    }} />
+                    <input
+                      type="email"
+                      name="email"
+                      value={form.email}
+                      onChange={handleChange}
+                      required
+                      placeholder="you@example.com"
+                      style={{
+                        width: "100%",
+                        padding: "14px 14px 14px 46px",
+                        border: "2px solid #e0e0e0",
+                        borderRadius: "12px",
+                        fontSize: "14px",
+                        outline: "none",
+                        transition: "all 0.3s",
+                        fontFamily: "inherit"
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = "#667eea"}
+                      onBlur={(e) => e.target.style.borderColor = "#e0e0e0"}
+                    />
+                  </div>
+                </div>
+
+                {/* Password Field */}
+                <div style={{ marginBottom: "20px" }}>
+                  <label style={{ 
+                    display: "block", 
+                    marginBottom: "8px", 
+                    color: "#333", 
+                    fontSize: "13px", 
+                    fontWeight: "600" 
+                  }}>
+                    Password
+                  </label>
+                  <div style={{ position: "relative" }}>
+                    <Lock size={18} style={{ 
+                      position: "absolute", 
+                      left: "16px", 
+                      top: "50%", 
+                      transform: "translateY(-50%)", 
+                      color: "#999" 
+                    }} />
+                    <input
+                      type={showPw ? "text" : "password"}
+                      name="password"
+                      value={form.password}
+                      onChange={handleChange}
+                      required
+                      placeholder="Enter your password"
+                      style={{
+                        width: "100%",
+                        padding: "14px 46px 14px 46px",
+                        border: "2px solid #e0e0e0",
+                        borderRadius: "12px",
+                        fontSize: "14px",
+                        outline: "none",
+                        transition: "all 0.3s",
+                        fontFamily: "inherit"
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = "#667eea"}
+                      onBlur={(e) => e.target.style.borderColor = "#e0e0e0"}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPw(!showPw)}
+                      style={{
+                        position: "absolute",
+                        right: "16px",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        color: "#999"
+                      }}
+                    >
+                      {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Options */}
+                <div style={{ 
+                  display: "flex", 
+                  justifyContent: "space-between", 
+                  alignItems: "center", 
+                  marginBottom: "28px" 
+                }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: "#666" }}>
+                    <input type="checkbox" style={{ accentColor: "#667eea" }} />
+                    Remember me
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/forgot-password")}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: "#667eea",
+                      fontSize: "13px",
+                      cursor: "pointer",
+                      fontWeight: "600"
+                    }}
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+
+                {/* Error Message */}
+                <AnimatePresence>
+                  {error && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      style={{
+                        background: "#fee",
+                        border: "1px solid #fcc",
+                        padding: "12px",
+                        borderRadius: "8px",
+                        color: "#e74c3c",
+                        fontSize: "12px",
+                        marginBottom: "20px",
+                        textAlign: "center"
+                      }}
+                    >
+                      {error}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Submit Button */}
+                <motion.button
+                  type="submit"
+                  disabled={loading}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  style={{
+                    width: "100%",
+                    padding: "14px",
+                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    border: "none",
+                    borderRadius: "12px",
+                    color: "white",
+                    fontWeight: "600",
+                    fontSize: "16px",
+                    cursor: loading ? "not-allowed" : "pointer",
+                    marginBottom: "24px",
+                    transition: "all 0.3s"
+                  }}
                 >
-                  Create Account
-                </span>
-              </p>
-            </form>
+                  {loading ? (
+                    <Loader2 size={20} style={{ animation: "spin 1s linear infinite", margin: "0 auto" }} />
+                  ) : (
+                    "Sign In"
+                  )}
+                </motion.button>
+
+                {/* Divider */}
+                <div style={{ display: "flex", alignItems: "center", marginBottom: "24px", gap: "15px" }}>
+                  <div style={{ flex: 1, height: "1px", background: "#e0e0e0" }} />
+                  <span style={{ color: "#999", fontSize: "12px" }}>OR CONTINUE WITH</span>
+                  <div style={{ flex: 1, height: "1px", background: "#e0e0e0" }} />
+                </div>
+
+                {/* Social Login */}
+                <div style={{ display: "flex", gap: "12px", marginBottom: "32px" }}>
+                  {["Google", "GitHub", "LinkedIn"].map((platform) => (
+                    <motion.button
+                      key={platform}
+                      whileHover={{ y: -2 }}
+                      style={{
+                        flex: 1,
+                        padding: "10px",
+                        background: "white",
+                        border: "2px solid #e0e0e0",
+                        borderRadius: "10px",
+                        color: "#666",
+                        fontSize: "13px",
+                        cursor: "pointer",
+                        fontWeight: "600",
+                        transition: "all 0.3s"
+                      }}
+                      onMouseEnter={(e) => e.target.style.borderColor = "#667eea"}
+                      onMouseLeave={(e) => e.target.style.borderColor = "#e0e0e0"}
+                    >
+                      {platform}
+                    </motion.button>
+                  ))}
+                </div>
+
+                {/* Register Link */}
+                <p style={{ textAlign: "center", color: "#666", fontSize: "13px" }}>
+                  Don't have an account?{" "}
+                  <motion.span
+                    whileHover={{ x: 5 }}
+                    onClick={() => navigate("/register")}
+                    style={{ 
+                      color: "#667eea", 
+                      cursor: "pointer", 
+                      fontWeight: "600",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "4px"
+                    }}
+                  >
+                    Create Account
+                    <ChevronRight size={14} />
+                  </motion.span>
+                </p>
+              </form>
+            </div>
           </motion.div>
         </motion.div>
       </div>
@@ -593,14 +554,14 @@ export default function Login() {
             to { transform: rotate(360deg); }
           }
           
-          @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
           }
           
           input:focus {
-            border-color: #00ff88 !important;
-            box-shadow: 0 0 20px rgba(0,255,136,0.2);
+            border-color: #667eea !important;
           }
           
           ::-webkit-scrollbar {
