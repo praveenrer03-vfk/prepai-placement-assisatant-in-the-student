@@ -31,6 +31,7 @@ const PERKS = [
 export default function Register() {
   const [form, setForm]       = useState({ name:"", email:"", password:"" });
   const [error, setError]     = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPw, setShowPw]   = useState(false);
   const [focused, setFocused] = useState("");
@@ -41,19 +42,27 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true); setError("");
+    setLoading(true); 
+    setError(""); 
+    setSuccess("");
     try {
       const res = await fetch("https://prepai-placement-assisatant-in-the.onrender.com/api/auth/register", {
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
       const data = await res.json();
-      if (res.ok) { navigate("/"); }
-      else { setError(data.message || "Registration failed."); }
+      if (res.ok) { 
+        setSuccess("Account created! Redirecting to login...");
+        setTimeout(() => navigate("/"), 1500);
+      } else { 
+        setError(data.error || "Registration failed.");
+      }
     } catch {
       setError("Unable to connect. Please try again.");
-    } finally { setLoading(false); }
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   const inputStyle = (name) => ({
@@ -92,7 +101,6 @@ export default function Register() {
           </pattern></defs>
           <rect width="100%" height="100%" fill="url(#ln)" />
         </svg>
-        {/* Floating orbs */}
         {[[20,20,"rgba(0,201,255,0.3)",14],[80,65,"rgba(167,139,250,0.25)",10],[60,15,"rgba(0,255,163,0.2)",8]].map(([x,y,c,s],i) => (
           <motion.div key={i}
             style={{ position:"absolute", left:`${x}%`, top:`${y}%`, width:s, height:s, borderRadius:"50%", background:c, filter:"blur(1px)" }}
@@ -116,7 +124,6 @@ export default function Register() {
           backdropFilter:"blur(24px)",
         }}
       >
-        {/* Top glow line — cyan tint to differentiate from Login */}
         <div style={{ position:"absolute", top:0, left:"10%", right:"10%", height:1,
           background:"linear-gradient(90deg,transparent,rgba(0,201,255,0.7),transparent)" }} />
 
@@ -232,6 +239,18 @@ export default function Register() {
                     background:"rgba(255,75,110,0.08)", border:"1px solid rgba(255,75,110,0.2)",
                     color:"rgba(255,160,160,0.9)", fontSize:12, fontWeight:600 }}>
                   ⚠ {error}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Success */}
+            <AnimatePresence>
+              {success && (
+                <motion.div initial={{ opacity:0, y:-6, scale:0.97 }} animate={{ opacity:1, y:0, scale:1 }} exit={{ opacity:0, scale:0.97 }}
+                  style={{ borderRadius:12, padding:"11px 14px",
+                    background:"rgba(0,255,163,0.08)", border:"1px solid rgba(0,255,163,0.2)",
+                    color:"rgba(0,255,163,0.9)", fontSize:12, fontWeight:600 }}>
+                  ✅ {success}
                 </motion.div>
               )}
             </AnimatePresence>
