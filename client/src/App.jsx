@@ -8,6 +8,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ResumeBuilder from './pages/ResumeBuilder';
 import Subscription from './pages/Subscription';
+import Leaderboard from './pages/Leaderboard';
 import ErrorBoundary from "./components/ErrorBoundary";
 
 // Protected route component
@@ -23,7 +24,7 @@ const ProtectedRoute = ({ children, requireAuth = true, requirePro = false }) =>
   
   // Check pro feature access
   if (requirePro && (subscriptionPlan === "free" || subscriptionStatus !== "active")) {
-    return <Navigate to="/subscription" replace />;
+    return <Navigate to="/payment" replace />;
   }
   
   return children;
@@ -40,13 +41,13 @@ const PublicRoute = ({ children }) => {
   return children;
 };
 
-// Add this component to handle subscription redirects
+// Subscription redirect handler
 const SubscriptionRedirect = () => {
   const subscriptionPlan = localStorage.getItem("subscriptionPlan");
   const subscriptionStatus = localStorage.getItem("subscriptionStatus");
   
-  // If user already has an active subscription, redirect to resume builder
-  if (subscriptionStatus === "active" && subscriptionPlan !== "free") {
+  // If user already has an active pro subscription, redirect to resume builder
+  if (subscriptionStatus === "active" && subscriptionPlan !== "free" && subscriptionPlan !== null) {
     return <Navigate to="/resume-builder" replace />;
   }
   
@@ -59,8 +60,13 @@ function App() {
     <BrowserRouter>
       <ErrorBoundary>
         <Routes>
-          {/* Public Routes */}
+          {/* Public Routes - No authentication required */}
           <Route path="/" element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          } />
+          <Route path="/login" element={
             <PublicRoute>
               <Login />
             </PublicRoute>
@@ -71,7 +77,7 @@ function App() {
             </PublicRoute>
           } />
           
-          {/* Protected Routes - Require Authentication */}
+          {/* Protected Routes - Authentication required */}
           <Route path="/dashboard" element={
             <ProtectedRoute requireAuth={true}>
               <Dashboard />
@@ -96,10 +102,15 @@ function App() {
             </ProtectedRoute>
           } />
           
-          {/* Resume Builder - Free for all authenticated users */}
           <Route path="/resume-builder" element={
             <ProtectedRoute requireAuth={true}>
               <ResumeBuilder />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/leaderboard" element={
+            <ProtectedRoute requireAuth={true}>
+              <Leaderboard />
             </ProtectedRoute>
           } />
           
@@ -116,15 +127,44 @@ function App() {
             </ProtectedRoute>
           } />
           
-          {/* Subscription route with redirect logic */}
+          {/* Subscription route with redirect logic for pro users */}
           <Route path="/subscription" element={
             <ProtectedRoute requireAuth={true}>
               <SubscriptionRedirect />
             </ProtectedRoute>
           } />
           
-          {/* 404 Route */}
-          <Route path="*" element={<ErrorBoundary />} />
+          {/* 404 Route - Catch all unmatched routes */}
+          <Route path="*" element={
+            <div style={{
+              minHeight: "100vh",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "#060610",
+              color: "#fff",
+              fontFamily: "sans-serif"
+            }}>
+              <div style={{ textAlign: "center" }}>
+                <h1 style={{ fontSize: 72, marginBottom: 16 }}>404</h1>
+                <p style={{ fontSize: 18, marginBottom: 24 }}>Page not found</p>
+                <button
+                  onClick={() => window.location.href = "/dashboard"}
+                  style={{
+                    padding: "12px 24px",
+                    background: "linear-gradient(135deg, #00ffa3, #00c9ff)",
+                    border: "none",
+                    borderRadius: 12,
+                    color: "#060610",
+                    fontWeight: 700,
+                    cursor: "pointer"
+                  }}
+                >
+                  Go to Dashboard
+                </button>
+              </div>
+            </div>
+          } />
         </Routes>
       </ErrorBoundary>
     </BrowserRouter>
