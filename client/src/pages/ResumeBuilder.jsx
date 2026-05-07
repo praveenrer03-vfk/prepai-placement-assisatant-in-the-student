@@ -4,11 +4,12 @@ import {
   ArrowLeft, Upload, Download, Eye, Edit2, Trash2, Plus, 
   X, Check, AlertCircle, Award, Target, TrendingUp, 
   FileText, User, Briefcase, GraduationCap, Mail, Phone,
-  MapPin,Globe, Star, Zap, Shield,
+  MapPin, Globe, Star, Zap, Shield,
   Sparkles, FileCheck, AlertTriangle, ChevronRight, Crown,
-  Code, BookOpen, Calendar, Clock, Users, MessageCircle
+  Code, BookOpen, Calendar, Clock, Users, MessageCircle,
+  Layout, Palette, Sparkle
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 // ATS Analyzer Utility
 const analyzeATS = (resumeData) => {
@@ -55,46 +56,46 @@ const analyzeATS = (resumeData) => {
   );
 
   scores.level = scores.overall >= 80 ? "Excellent" : scores.overall >= 60 ? "Good" : "Needs Improvement";
-  scores.color = scores.overall >= 80 ? "#00ffa3" : scores.overall >= 60 ? "#fbbf24" : "#ff4b6e";
+  scores.color = scores.overall >= 80 ? "#6366f1" : scores.overall >= 60 ? "#f59e0b" : "#ef4444";
 
   return scores;
 };
 
-// Template styles
+// Template styles - New elegant color scheme
 const TEMPLATES = {
   modern: {
     name: "Modern",
-    preview: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    preview: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
     style: {
-      headerBg: "linear-gradient(135deg, #667eea, #764ba2)",
-      accent: "#667eea",
+      headerBg: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+      accent: "#6366f1",
       font: "'Inter', sans-serif"
     }
   },
   professional: {
     name: "Professional",
-    preview: "linear-gradient(135deg, #2c3e50, #3498db)",
+    preview: "linear-gradient(135deg, #1e293b, #3b82f6)",
     style: {
-      headerBg: "#2c3e50",
-      accent: "#3498db",
+      headerBg: "#1e293b",
+      accent: "#3b82f6",
       font: "'Roboto', sans-serif"
     }
   },
   creative: {
     name: "Creative",
-    preview: "linear-gradient(135deg, #f093fb, #f5576c)",
+    preview: "linear-gradient(135deg, #ec4899, #f43f5e)",
     style: {
-      headerBg: "linear-gradient(135deg, #f093fb, #f5576c)",
-      accent: "#f5576c",
+      headerBg: "linear-gradient(135deg, #ec4899, #f43f5e)",
+      accent: "#ec4899",
       font: "'Poppins', sans-serif"
     }
   },
   minimalist: {
     name: "Minimalist",
-    preview: "#1a1a2e",
+    preview: "#0f172a",
     style: {
-      headerBg: "#1a1a2e",
-      accent: "#00ffa3",
+      headerBg: "#0f172a",
+      accent: "#64748b",
       font: "'Inter', sans-serif"
     }
   }
@@ -104,8 +105,9 @@ export default function ResumeBuilder() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("build");
   const [selectedTemplate, setSelectedTemplate] = useState("modern");
-  const [showPreview, setShowPreview] = useState(false);
+  const [showPreview, setShowPreview] = useState(true);
   const [atsScore, setAtsScore] = useState(null);
+  const [animateScore, setAnimateScore] = useState(false);
   
   // Resume Data State
   const [resumeData, setResumeData] = useState({
@@ -136,6 +138,9 @@ export default function ResumeBuilder() {
   useEffect(() => {
     const score = analyzeATS(resumeData);
     setAtsScore(score);
+    setAnimateScore(true);
+    const timer = setTimeout(() => setAnimateScore(false), 500);
+    return () => clearTimeout(timer);
   }, [resumeData]);
 
   // Handlers
@@ -208,7 +213,6 @@ export default function ResumeBuilder() {
     URL.revokeObjectURL(url);
     
     localStorage.setItem("resumeData", resumeJSON);
-    alert("Resume saved successfully!");
   };
 
   const exportPDF = () => {
@@ -216,58 +220,67 @@ export default function ResumeBuilder() {
   };
 
   const getATSScoreColor = () => {
-    if (!atsScore) return "#6b7280";
-    if (atsScore.overall >= 80) return "#00ffa3";
-    if (atsScore.overall >= 60) return "#fbbf24";
-    return "#ff4b6e";
+    if (!atsScore) return "#64748b";
+    if (atsScore.overall >= 80) return "#6366f1";
+    if (atsScore.overall >= 60) return "#f59e0b";
+    return "#ef4444";
+  };
+
+  // Animation variants
+  const fadeInUp = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.4 }
+  };
+
+  const staggerContainer = {
+    animate: { transition: { staggerChildren: 0.05 } }
   };
 
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Roboto:wght@400;500;700&family=Poppins:wght@400;500;600;700;800&display=swap');
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #060610; font-family: 'Inter', sans-serif; }
-        .resume-container { min-height: 100vh; background: #060610; }
+        body { background: #f8fafc; font-family: 'Inter', sans-serif; }
+        .resume-container { min-height: 100vh; background: #f8fafc; }
         ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); }
+        ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 3px; }
       `}</style>
 
       <div className="resume-container" style={{
         minHeight: "100vh",
-        background: "#060610",
+        background: "#f8fafc",
         position: "relative",
         overflowX: "hidden"
       }}>
-        {/* Background Effects */}
-        <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
-          <div style={{ position: "absolute", width: 600, height: 600, borderRadius: "50%", top: "-20%", right: "-20%",
-            background: "radial-gradient(circle, rgba(0,255,163,0.08) 0%, transparent 65%)" }} />
-          <div style={{ position: "absolute", width: 500, height: 500, borderRadius: "50%", bottom: "-10%", left: "-10%",
-            background: "radial-gradient(circle, rgba(124,58,237,0.08) 0%, transparent 65%)" }} />
-        </div>
-
         {/* Header */}
-        <div style={{ position: "relative", zIndex: 1, maxWidth: 1400, margin: "0 auto", padding: "20px" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+        <div style={{ position: "relative", zIndex: 1, maxWidth: 1400, margin: "0 auto", padding: "24px 32px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32 }}>
             <button
               onClick={() => navigate("/dashboard")}
               style={{
                 width: 40, height: 40, borderRadius: 12,
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.08)",
+                background: "#fff",
+                border: "1px solid #e2e8f0",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: "pointer", color: "rgba(255,255,255,0.6)"
+                cursor: "pointer", color: "#475569",
+                transition: "all 0.2s"
               }}
+              onMouseEnter={(e) => e.currentTarget.style.background = "#f1f5f9"}
+              onMouseLeave={(e) => e.currentTarget.style.background = "#fff"}
             >
               <ArrowLeft size={20} />
             </button>
             <div style={{ textAlign: "center" }}>
-              <h1 style={{ fontSize: 28, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>
-                Resume Builder
-              </h1>
-              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "center" }}>
+                <Sparkle size={24} fill="#6366f1" color="#6366f1" />
+                <h1 style={{ fontSize: 28, fontWeight: 800, background: "linear-gradient(135deg, #6366f1, #8b5cf6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", letterSpacing: "-0.02em" }}>
+                  Resume Builder
+                </h1>
+              </div>
+              <p style={{ fontSize: 13, color: "#64748b", marginTop: 4 }}>
                 Create ATS-friendly resume & get instant feedback
               </p>
             </div>
@@ -275,36 +288,42 @@ export default function ResumeBuilder() {
               <button
                 onClick={downloadResume}
                 style={{
-                  padding: "8px 16px",
-                  background: "rgba(0,255,163,0.1)",
-                  border: "1px solid rgba(0,255,163,0.3)",
+                  padding: "8px 20px",
+                  background: "#fff",
+                  border: "1px solid #e2e8f0",
                   borderRadius: 10,
-                  color: "#00ffa3",
+                  color: "#475569",
                   fontSize: 13,
                   fontWeight: 600,
                   cursor: "pointer",
                   display: "flex",
                   alignItems: "center",
-                  gap: 6
+                  gap: 6,
+                  transition: "all 0.2s"
                 }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "#f1f5f9"; e.currentTarget.style.borderColor = "#cbd5e1"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.borderColor = "#e2e8f0"; }}
               >
                 <Download size={16} /> Save
               </button>
               <button
                 onClick={exportPDF}
                 style={{
-                  padding: "8px 16px",
-                  background: "linear-gradient(135deg, #00ffa3, #00c9ff)",
+                  padding: "8px 20px",
+                  background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
                   border: "none",
                   borderRadius: 10,
-                  color: "#060610",
+                  color: "#fff",
                   fontSize: 13,
                   fontWeight: 700,
                   cursor: "pointer",
                   display: "flex",
                   alignItems: "center",
-                  gap: 6
+                  gap: 6,
+                  transition: "transform 0.2s, box-shadow 0.2s"
                 }}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(99,102,241,0.3)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}
               >
                 <FileText size={16} /> Export PDF
               </button>
@@ -312,27 +331,29 @@ export default function ResumeBuilder() {
           </div>
 
           {/* Tabs */}
-          <div style={{ display: "flex", gap: 12, marginBottom: 24, borderBottom: "1px solid rgba(255,255,255,0.08)", paddingBottom: 12 }}>
+          <div style={{ display: "flex", gap: 8, marginBottom: 32, borderBottom: "2px solid #e2e8f0", paddingBottom: 0 }}>
             {[
               { id: "build", label: "Build Resume", icon: <Edit2 size={16} /> },
-              { id: "templates", label: "Templates", icon: <FileText size={16} /> },
+              { id: "templates", label: "Templates", icon: <Layout size={16} /> },
               { id: "ats", label: "ATS Analysis", icon: <Target size={16} /> }
             ].map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 style={{
-                  padding: "8px 20px",
-                  background: activeTab === tab.id ? "rgba(0,255,163,0.1)" : "transparent",
-                  border: activeTab === tab.id ? "1px solid rgba(0,255,163,0.3)" : "1px solid transparent",
-                  borderRadius: 10,
-                  color: activeTab === tab.id ? "#00ffa3" : "rgba(255,255,255,0.6)",
+                  padding: "10px 24px",
+                  background: "transparent",
+                  border: "none",
+                  borderBottom: activeTab === tab.id ? "2px solid #6366f1" : "2px solid transparent",
+                  color: activeTab === tab.id ? "#6366f1" : "#64748b",
                   fontSize: 13,
                   fontWeight: 600,
                   cursor: "pointer",
                   display: "flex",
                   alignItems: "center",
-                  gap: 8
+                  gap: 8,
+                  marginBottom: "-2px",
+                  transition: "all 0.2s"
                 }}
               >
                 {tab.icon}
@@ -342,24 +363,27 @@ export default function ResumeBuilder() {
           </div>
 
           {/* Main Content */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 400px", gap: 24 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 400px", gap: 32 }}>
             {/* Left Panel - Form */}
-            <div>
+            <motion.div variants={staggerContainer} initial="initial" animate="animate">
               {activeTab === "build" && (
                 <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  style={{ display: "flex", flexDirection: "column", gap: 20 }}
+                  variants={fadeInUp}
+                  style={{ display: "flex", flexDirection: "column", gap: 24 }}
                 >
                   {/* Personal Information */}
                   <div style={{
-                    background: "rgba(255,255,255,0.03)",
-                    border: "1px solid rgba(255,255,255,0.08)",
+                    background: "#fff",
                     borderRadius: 20,
-                    padding: 24
+                    padding: 28,
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                    border: "1px solid #e2e8f0"
                   }}>
-                    <h3 style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
-                      <User size={18} color="#00ffa3" /> Personal Information
+                    <h3 style={{ fontSize: 18, fontWeight: 700, color: "#0f172a", marginBottom: 24, display: "flex", alignItems: "center", gap: 10 }}>
+                      <div style={{ width: 32, height: 32, background: "linear-gradient(135deg, #6366f1, #8b5cf6)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <User size={16} color="#fff" />
+                      </div>
+                      Personal Information
                     </h3>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                       <input
@@ -368,13 +392,17 @@ export default function ResumeBuilder() {
                         value={resumeData.personal.name}
                         onChange={(e) => updatePersonalInfo("name", e.target.value)}
                         style={{
-                          padding: "12px",
-                          background: "rgba(255,255,255,0.05)",
-                          border: "1px solid rgba(255,255,255,0.1)",
-                          borderRadius: 10,
-                          color: "#fff",
-                          outline: "none"
+                          padding: "12px 16px",
+                          background: "#f8fafc",
+                          border: "1px solid #e2e8f0",
+                          borderRadius: 12,
+                          color: "#0f172a",
+                          outline: "none",
+                          fontSize: 14,
+                          transition: "all 0.2s"
                         }}
+                        onFocus={(e) => e.currentTarget.style.borderColor = "#6366f1"}
+                        onBlur={(e) => e.currentTarget.style.borderColor = "#e2e8f0"}
                       />
                       <input
                         type="text"
@@ -382,13 +410,17 @@ export default function ResumeBuilder() {
                         value={resumeData.personal.title}
                         onChange={(e) => updatePersonalInfo("title", e.target.value)}
                         style={{
-                          padding: "12px",
-                          background: "rgba(255,255,255,0.05)",
-                          border: "1px solid rgba(255,255,255,0.1)",
-                          borderRadius: 10,
-                          color: "#fff",
-                          outline: "none"
+                          padding: "12px 16px",
+                          background: "#f8fafc",
+                          border: "1px solid #e2e8f0",
+                          borderRadius: 12,
+                          color: "#0f172a",
+                          outline: "none",
+                          fontSize: 14,
+                          transition: "all 0.2s"
                         }}
+                        onFocus={(e) => e.currentTarget.style.borderColor = "#6366f1"}
+                        onBlur={(e) => e.currentTarget.style.borderColor = "#e2e8f0"}
                       />
                       <input
                         type="email"
@@ -396,13 +428,17 @@ export default function ResumeBuilder() {
                         value={resumeData.personal.email}
                         onChange={(e) => updatePersonalInfo("email", e.target.value)}
                         style={{
-                          padding: "12px",
-                          background: "rgba(255,255,255,0.05)",
-                          border: "1px solid rgba(255,255,255,0.1)",
-                          borderRadius: 10,
-                          color: "#fff",
-                          outline: "none"
+                          padding: "12px 16px",
+                          background: "#f8fafc",
+                          border: "1px solid #e2e8f0",
+                          borderRadius: 12,
+                          color: "#0f172a",
+                          outline: "none",
+                          fontSize: 14,
+                          transition: "all 0.2s"
                         }}
+                        onFocus={(e) => e.currentTarget.style.borderColor = "#6366f1"}
+                        onBlur={(e) => e.currentTarget.style.borderColor = "#e2e8f0"}
                       />
                       <input
                         type="tel"
@@ -410,13 +446,17 @@ export default function ResumeBuilder() {
                         value={resumeData.personal.phone}
                         onChange={(e) => updatePersonalInfo("phone", e.target.value)}
                         style={{
-                          padding: "12px",
-                          background: "rgba(255,255,255,0.05)",
-                          border: "1px solid rgba(255,255,255,0.1)",
-                          borderRadius: 10,
-                          color: "#fff",
-                          outline: "none"
+                          padding: "12px 16px",
+                          background: "#f8fafc",
+                          border: "1px solid #e2e8f0",
+                          borderRadius: 12,
+                          color: "#0f172a",
+                          outline: "none",
+                          fontSize: 14,
+                          transition: "all 0.2s"
                         }}
+                        onFocus={(e) => e.currentTarget.style.borderColor = "#6366f1"}
+                        onBlur={(e) => e.currentTarget.style.borderColor = "#e2e8f0"}
                       />
                       <input
                         type="text"
@@ -424,13 +464,17 @@ export default function ResumeBuilder() {
                         value={resumeData.personal.location}
                         onChange={(e) => updatePersonalInfo("location", e.target.value)}
                         style={{
-                          padding: "12px",
-                          background: "rgba(255,255,255,0.05)",
-                          border: "1px solid rgba(255,255,255,0.1)",
-                          borderRadius: 10,
-                          color: "#fff",
-                          outline: "none"
+                          padding: "12px 16px",
+                          background: "#f8fafc",
+                          border: "1px solid #e2e8f0",
+                          borderRadius: 12,
+                          color: "#0f172a",
+                          outline: "none",
+                          fontSize: 14,
+                          transition: "all 0.2s"
                         }}
+                        onFocus={(e) => e.currentTarget.style.borderColor = "#6366f1"}
+                        onBlur={(e) => e.currentTarget.style.borderColor = "#e2e8f0"}
                       />
                       <input
                         type="url"
@@ -438,13 +482,17 @@ export default function ResumeBuilder() {
                         value={resumeData.personal.linkedin}
                         onChange={(e) => updatePersonalInfo("linkedin", e.target.value)}
                         style={{
-                          padding: "12px",
-                          background: "rgba(255,255,255,0.05)",
-                          border: "1px solid rgba(255,255,255,0.1)",
-                          borderRadius: 10,
-                          color: "#fff",
-                          outline: "none"
+                          padding: "12px 16px",
+                          background: "#f8fafc",
+                          border: "1px solid #e2e8f0",
+                          borderRadius: 12,
+                          color: "#0f172a",
+                          outline: "none",
+                          fontSize: 14,
+                          transition: "all 0.2s"
                         }}
+                        onFocus={(e) => e.currentTarget.style.borderColor = "#6366f1"}
+                        onBlur={(e) => e.currentTarget.style.borderColor = "#e2e8f0"}
                       />
                     </div>
                     <textarea
@@ -454,73 +502,98 @@ export default function ResumeBuilder() {
                       rows="3"
                       style={{
                         width: "100%",
-                        marginTop: 16,
-                        padding: "12px",
-                        background: "rgba(255,255,255,0.05)",
-                        border: "1px solid rgba(255,255,255,0.1)",
-                        borderRadius: 10,
-                        color: "#fff",
+                        marginTop: 20,
+                        padding: "12px 16px",
+                        background: "#f8fafc",
+                        border: "1px solid #e2e8f0",
+                        borderRadius: 12,
+                        color: "#0f172a",
                         outline: "none",
-                        resize: "vertical"
+                        resize: "vertical",
+                        fontSize: 14,
+                        fontFamily: "inherit",
+                        transition: "all 0.2s"
                       }}
+                      onFocus={(e) => e.currentTarget.style.borderColor = "#6366f1"}
+                      onBlur={(e) => e.currentTarget.style.borderColor = "#e2e8f0"}
                     />
                   </div>
 
                   {/* Work Experience */}
                   <div style={{
-                    background: "rgba(255,255,255,0.03)",
-                    border: "1px solid rgba(255,255,255,0.08)",
+                    background: "#fff",
                     borderRadius: 20,
-                    padding: 24
+                    padding: 28,
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                    border: "1px solid #e2e8f0"
                   }}>
-                    <h3 style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
-                      <Briefcase size={18} color="#00c9ff" /> Work Experience
+                    <h3 style={{ fontSize: 18, fontWeight: 700, color: "#0f172a", marginBottom: 24, display: "flex", alignItems: "center", gap: 10 }}>
+                      <div style={{ width: 32, height: 32, background: "linear-gradient(135deg, #3b82f6, #06b6d4)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <Briefcase size={16} color="#fff" />
+                      </div>
+                      Work Experience
                     </h3>
                     
-                    {resumeData.experience.map((exp, idx) => (
-                      <div key={idx} style={{
-                        background: "rgba(255,255,255,0.05)",
-                        borderRadius: 12,
-                        padding: 12,
-                        marginBottom: 12,
-                        position: "relative"
-                      }}>
-                        <button
-                          onClick={() => removeExperience(idx)}
+                    <AnimatePresence>
+                      {resumeData.experience.map((exp, idx) => (
+                        <motion.div 
+                          key={idx} 
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: 20 }}
                           style={{
-                            position: "absolute",
-                            top: 8,
-                            right: 8,
-                            background: "rgba(255,75,110,0.1)",
-                            border: "none",
-                            borderRadius: 6,
-                            padding: 4,
-                            cursor: "pointer",
-                            color: "#ff4b6e"
+                            background: "#f8fafc",
+                            borderRadius: 16,
+                            padding: 16,
+                            marginBottom: 12,
+                            position: "relative",
+                            border: "1px solid #e2e8f0"
                           }}
                         >
-                          <Trash2 size={14} />
-                        </button>
-                        <p style={{ fontWeight: 700, color: "#fff" }}>{exp.role} at {exp.company}</p>
-                        <p style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>{exp.duration}</p>
-                        <p style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", marginTop: 6 }}>{exp.description}</p>
-                      </div>
-                    ))}
+                          <button
+                            onClick={() => removeExperience(idx)}
+                            style={{
+                              position: "absolute",
+                              top: 12,
+                              right: 12,
+                              background: "#fee2e2",
+                              border: "none",
+                              borderRadius: 8,
+                              padding: 6,
+                              cursor: "pointer",
+                              color: "#ef4444",
+                              transition: "all 0.2s"
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = "#fecaca"}
+                            onMouseLeave={(e) => e.currentTarget.style.background = "#fee2e2"}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                          <p style={{ fontWeight: 700, color: "#0f172a", fontSize: 15 }}>{exp.role} at {exp.company}</p>
+                          <p style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>{exp.duration}</p>
+                          <p style={{ fontSize: 13, color: "#475569", marginTop: 8, lineHeight: 1.5 }}>{exp.description}</p>
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
                     
-                    <div style={{ display: "grid", gap: 12 }}>
+                    <div style={{ display: "grid", gap: 12, marginTop: 8 }}>
                       <input
                         type="text"
                         placeholder="Company Name"
                         value={newExperience.company}
                         onChange={(e) => setNewExperience({ ...newExperience, company: e.target.value })}
                         style={{
-                          padding: "12px",
-                          background: "rgba(255,255,255,0.05)",
-                          border: "1px solid rgba(255,255,255,0.1)",
-                          borderRadius: 10,
-                          color: "#fff",
-                          outline: "none"
+                          padding: "12px 16px",
+                          background: "#f8fafc",
+                          border: "1px solid #e2e8f0",
+                          borderRadius: 12,
+                          color: "#0f172a",
+                          outline: "none",
+                          fontSize: 14,
+                          transition: "all 0.2s"
                         }}
+                        onFocus={(e) => e.currentTarget.style.borderColor = "#6366f1"}
+                        onBlur={(e) => e.currentTarget.style.borderColor = "#e2e8f0"}
                       />
                       <input
                         type="text"
@@ -528,13 +601,17 @@ export default function ResumeBuilder() {
                         value={newExperience.role}
                         onChange={(e) => setNewExperience({ ...newExperience, role: e.target.value })}
                         style={{
-                          padding: "12px",
-                          background: "rgba(255,255,255,0.05)",
-                          border: "1px solid rgba(255,255,255,0.1)",
-                          borderRadius: 10,
-                          color: "#fff",
-                          outline: "none"
+                          padding: "12px 16px",
+                          background: "#f8fafc",
+                          border: "1px solid #e2e8f0",
+                          borderRadius: 12,
+                          color: "#0f172a",
+                          outline: "none",
+                          fontSize: 14,
+                          transition: "all 0.2s"
                         }}
+                        onFocus={(e) => e.currentTarget.style.borderColor = "#6366f1"}
+                        onBlur={(e) => e.currentTarget.style.borderColor = "#e2e8f0"}
                       />
                       <input
                         type="text"
@@ -542,13 +619,17 @@ export default function ResumeBuilder() {
                         value={newExperience.duration}
                         onChange={(e) => setNewExperience({ ...newExperience, duration: e.target.value })}
                         style={{
-                          padding: "12px",
-                          background: "rgba(255,255,255,0.05)",
-                          border: "1px solid rgba(255,255,255,0.1)",
-                          borderRadius: 10,
-                          color: "#fff",
-                          outline: "none"
+                          padding: "12px 16px",
+                          background: "#f8fafc",
+                          border: "1px solid #e2e8f0",
+                          borderRadius: 12,
+                          color: "#0f172a",
+                          outline: "none",
+                          fontSize: 14,
+                          transition: "all 0.2s"
                         }}
+                        onFocus={(e) => e.currentTarget.style.borderColor = "#6366f1"}
+                        onBlur={(e) => e.currentTarget.style.borderColor = "#e2e8f0"}
                       />
                       <textarea
                         placeholder="Key responsibilities and achievements"
@@ -556,88 +637,117 @@ export default function ResumeBuilder() {
                         onChange={(e) => setNewExperience({ ...newExperience, description: e.target.value })}
                         rows="2"
                         style={{
-                          padding: "12px",
-                          background: "rgba(255,255,255,0.05)",
-                          border: "1px solid rgba(255,255,255,0.1)",
-                          borderRadius: 10,
-                          color: "#fff",
-                          outline: "none"
+                          padding: "12px 16px",
+                          background: "#f8fafc",
+                          border: "1px solid #e2e8f0",
+                          borderRadius: 12,
+                          color: "#0f172a",
+                          outline: "none",
+                          fontSize: 14,
+                          resize: "vertical",
+                          transition: "all 0.2s"
                         }}
+                        onFocus={(e) => e.currentTarget.style.borderColor = "#6366f1"}
+                        onBlur={(e) => e.currentTarget.style.borderColor = "#e2e8f0"}
                       />
-                      <button
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={addExperience}
                         style={{
-                          padding: "10px",
-                          background: "rgba(0,255,163,0.1)",
-                          border: "1px solid rgba(0,255,163,0.3)",
-                          borderRadius: 10,
-                          color: "#00ffa3",
+                          padding: "12px",
+                          background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+                          border: "none",
+                          borderRadius: 12,
+                          color: "#fff",
                           cursor: "pointer",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          gap: 6
+                          gap: 8,
+                          fontSize: 14,
+                          fontWeight: 600
                         }}
                       >
-                        <Plus size={16} /> Add Experience
-                      </button>
+                        <Plus size={18} /> Add Experience
+                      </motion.button>
                     </div>
                   </div>
 
                   {/* Education */}
                   <div style={{
-                    background: "rgba(255,255,255,0.03)",
-                    border: "1px solid rgba(255,255,255,0.08)",
+                    background: "#fff",
                     borderRadius: 20,
-                    padding: 24
+                    padding: 28,
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                    border: "1px solid #e2e8f0"
                   }}>
-                    <h3 style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
-                      <GraduationCap size={18} color="#a78bfa" /> Education
+                    <h3 style={{ fontSize: 18, fontWeight: 700, color: "#0f172a", marginBottom: 24, display: "flex", alignItems: "center", gap: 10 }}>
+                      <div style={{ width: 32, height: 32, background: "linear-gradient(135deg, #8b5cf6, #d946ef)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <GraduationCap size={16} color="#fff" />
+                      </div>
+                      Education
                     </h3>
                     
-                    {resumeData.education.map((edu, idx) => (
-                      <div key={idx} style={{
-                        background: "rgba(255,255,255,0.05)",
-                        borderRadius: 12,
-                        padding: 12,
-                        marginBottom: 12,
-                        position: "relative"
-                      }}>
-                        <button
-                          onClick={() => removeEducation(idx)}
+                    <AnimatePresence>
+                      {resumeData.education.map((edu, idx) => (
+                        <motion.div 
+                          key={idx} 
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: 20 }}
                           style={{
-                            position: "absolute",
-                            top: 8,
-                            right: 8,
-                            background: "rgba(255,75,110,0.1)",
-                            border: "none",
-                            borderRadius: 6,
-                            padding: 4,
-                            cursor: "pointer",
-                            color: "#ff4b6e"
+                            background: "#f8fafc",
+                            borderRadius: 16,
+                            padding: 16,
+                            marginBottom: 12,
+                            position: "relative",
+                            border: "1px solid #e2e8f0"
                           }}
                         >
-                          <Trash2 size={14} />
-                        </button>
-                        <p style={{ fontWeight: 700, color: "#fff" }}>{edu.degree} - {edu.institution}</p>
-                        <p style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>{edu.year} | CGPA: {edu.cgpa}</p>
-                      </div>
-                    ))}
+                          <button
+                            onClick={() => removeEducation(idx)}
+                            style={{
+                              position: "absolute",
+                              top: 12,
+                              right: 12,
+                              background: "#fee2e2",
+                              border: "none",
+                              borderRadius: 8,
+                              padding: 6,
+                              cursor: "pointer",
+                              color: "#ef4444",
+                              transition: "all 0.2s"
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = "#fecaca"}
+                            onMouseLeave={(e) => e.currentTarget.style.background = "#fee2e2"}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                          <p style={{ fontWeight: 700, color: "#0f172a", fontSize: 15 }}>{edu.degree} - {edu.institution}</p>
+                          <p style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>{edu.year} | CGPA: {edu.cgpa}</p>
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
                     
-                    <div style={{ display: "grid", gap: 12 }}>
+                    <div style={{ display: "grid", gap: 12, marginTop: 8 }}>
                       <input
                         type="text"
                         placeholder="Institution Name"
                         value={newEducation.institution}
                         onChange={(e) => setNewEducation({ ...newEducation, institution: e.target.value })}
                         style={{
-                          padding: "12px",
-                          background: "rgba(255,255,255,0.05)",
-                          border: "1px solid rgba(255,255,255,0.1)",
-                          borderRadius: 10,
-                          color: "#fff",
-                          outline: "none"
+                          padding: "12px 16px",
+                          background: "#f8fafc",
+                          border: "1px solid #e2e8f0",
+                          borderRadius: 12,
+                          color: "#0f172a",
+                          outline: "none",
+                          fontSize: 14,
+                          transition: "all 0.2s"
                         }}
+                        onFocus={(e) => e.currentTarget.style.borderColor = "#6366f1"}
+                        onBlur={(e) => e.currentTarget.style.borderColor = "#e2e8f0"}
                       />
                       <input
                         type="text"
@@ -645,13 +755,17 @@ export default function ResumeBuilder() {
                         value={newEducation.degree}
                         onChange={(e) => setNewEducation({ ...newEducation, degree: e.target.value })}
                         style={{
-                          padding: "12px",
-                          background: "rgba(255,255,255,0.05)",
-                          border: "1px solid rgba(255,255,255,0.1)",
-                          borderRadius: 10,
-                          color: "#fff",
-                          outline: "none"
+                          padding: "12px 16px",
+                          background: "#f8fafc",
+                          border: "1px solid #e2e8f0",
+                          borderRadius: 12,
+                          color: "#0f172a",
+                          outline: "none",
+                          fontSize: 14,
+                          transition: "all 0.2s"
                         }}
+                        onFocus={(e) => e.currentTarget.style.borderColor = "#6366f1"}
+                        onBlur={(e) => e.currentTarget.style.borderColor = "#e2e8f0"}
                       />
                       <input
                         type="text"
@@ -659,13 +773,17 @@ export default function ResumeBuilder() {
                         value={newEducation.year}
                         onChange={(e) => setNewEducation({ ...newEducation, year: e.target.value })}
                         style={{
-                          padding: "12px",
-                          background: "rgba(255,255,255,0.05)",
-                          border: "1px solid rgba(255,255,255,0.1)",
-                          borderRadius: 10,
-                          color: "#fff",
-                          outline: "none"
+                          padding: "12px 16px",
+                          background: "#f8fafc",
+                          border: "1px solid #e2e8f0",
+                          borderRadius: 12,
+                          color: "#0f172a",
+                          outline: "none",
+                          fontSize: 14,
+                          transition: "all 0.2s"
                         }}
+                        onFocus={(e) => e.currentTarget.style.borderColor = "#6366f1"}
+                        onBlur={(e) => e.currentTarget.style.borderColor = "#e2e8f0"}
                       />
                       <input
                         type="text"
@@ -673,62 +791,82 @@ export default function ResumeBuilder() {
                         value={newEducation.cgpa}
                         onChange={(e) => setNewEducation({ ...newEducation, cgpa: e.target.value })}
                         style={{
-                          padding: "12px",
-                          background: "rgba(255,255,255,0.05)",
-                          border: "1px solid rgba(255,255,255,0.1)",
-                          borderRadius: 10,
-                          color: "#fff",
-                          outline: "none"
+                          padding: "12px 16px",
+                          background: "#f8fafc",
+                          border: "1px solid #e2e8f0",
+                          borderRadius: 12,
+                          color: "#0f172a",
+                          outline: "none",
+                          fontSize: 14,
+                          transition: "all 0.2s"
                         }}
+                        onFocus={(e) => e.currentTarget.style.borderColor = "#6366f1"}
+                        onBlur={(e) => e.currentTarget.style.borderColor = "#e2e8f0"}
                       />
-                      <button
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={addEducation}
                         style={{
-                          padding: "10px",
-                          background: "rgba(0,255,163,0.1)",
-                          border: "1px solid rgba(0,255,163,0.3)",
-                          borderRadius: 10,
-                          color: "#00ffa3",
+                          padding: "12px",
+                          background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+                          border: "none",
+                          borderRadius: 12,
+                          color: "#fff",
                           cursor: "pointer",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          gap: 6
+                          gap: 8,
+                          fontSize: 14,
+                          fontWeight: 600
                         }}
                       >
-                        <Plus size={16} /> Add Education
-                      </button>
+                        <Plus size={18} /> Add Education
+                      </motion.button>
                     </div>
                   </div>
 
                   {/* Skills */}
                   <div style={{
-                    background: "rgba(255,255,255,0.03)",
-                    border: "1px solid rgba(255,255,255,0.08)",
+                    background: "#fff",
                     borderRadius: 20,
-                    padding: 24
+                    padding: 28,
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                    border: "1px solid #e2e8f0"
                   }}>
-                    <h3 style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
-                      <Zap size={18} color="#fbbf24" /> Technical Skills
+                    <h3 style={{ fontSize: 18, fontWeight: 700, color: "#0f172a", marginBottom: 24, display: "flex", alignItems: "center", gap: 10 }}>
+                      <div style={{ width: 32, height: 32, background: "linear-gradient(135deg, #f59e0b, #ef4444)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <Zap size={16} color="#fff" />
+                      </div>
+                      Technical Skills
                     </h3>
                     
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
-                      {resumeData.skills.map((skill, idx) => (
-                        <span key={idx} style={{
-                          background: "rgba(0,255,163,0.1)",
-                          border: "1px solid rgba(0,255,163,0.3)",
-                          borderRadius: 20,
-                          padding: "5px 12px",
-                          fontSize: 12,
-                          color: "#00ffa3",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 6
-                        }}>
-                          {skill}
-                          <X size={12} style={{ cursor: "pointer" }} onClick={() => removeSkill(idx)} />
-                        </span>
-                      ))}
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 20 }}>
+                      <AnimatePresence>
+                        {resumeData.skills.map((skill, idx) => (
+                          <motion.span
+                            key={idx}
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.8 }}
+                            style={{
+                              background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+                              borderRadius: 24,
+                              padding: "6px 14px",
+                              fontSize: 12,
+                              color: "#fff",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 8,
+                              fontWeight: 500
+                            }}
+                          >
+                            {skill}
+                            <X size={12} style={{ cursor: "pointer", opacity: 0.8 }} onClick={() => removeSkill(idx)} />
+                          </motion.span>
+                        ))}
+                      </AnimatePresence>
                     </div>
                     
                     <div style={{ display: "flex", gap: 12 }}>
@@ -740,30 +878,38 @@ export default function ResumeBuilder() {
                         onKeyPress={(e) => e.key === "Enter" && addSkill()}
                         style={{
                           flex: 1,
-                          padding: "12px",
-                          background: "rgba(255,255,255,0.05)",
-                          border: "1px solid rgba(255,255,255,0.1)",
-                          borderRadius: 10,
-                          color: "#fff",
-                          outline: "none"
+                          padding: "12px 16px",
+                          background: "#f8fafc",
+                          border: "1px solid #e2e8f0",
+                          borderRadius: 12,
+                          color: "#0f172a",
+                          outline: "none",
+                          fontSize: 14,
+                          transition: "all 0.2s"
                         }}
+                        onFocus={(e) => e.currentTarget.style.borderColor = "#6366f1"}
+                        onBlur={(e) => e.currentTarget.style.borderColor = "#e2e8f0"}
                       />
-                      <button
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={addSkill}
                         style={{
-                          padding: "10px 20px",
-                          background: "rgba(0,255,163,0.1)",
-                          border: "1px solid rgba(0,255,163,0.3)",
-                          borderRadius: 10,
-                          color: "#00ffa3",
-                          cursor: "pointer"
+                          padding: "12px 24px",
+                          background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+                          border: "none",
+                          borderRadius: 12,
+                          color: "#fff",
+                          cursor: "pointer",
+                          fontWeight: 600,
+                          fontSize: 14
                         }}
                       >
                         Add
-                      </button>
+                      </motion.button>
                     </div>
-                    <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 8 }}>
-                      💡 Add skills relevant to your target job role
+                    <p style={{ fontSize: 11, color: "#94a3b8", marginTop: 12, display: "flex", alignItems: "center", gap: 4 }}>
+                      <span>💡</span> Add skills relevant to your target job role
                     </p>
                   </div>
                 </motion.div>
@@ -771,83 +917,97 @@ export default function ResumeBuilder() {
 
               {activeTab === "templates" && (
                 <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
                   style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 20 }}
                 >
                   {Object.entries(TEMPLATES).map(([key, template]) => (
-                    <div
+                    <motion.div
                       key={key}
+                      whileHover={{ y: -4 }}
                       onClick={() => setSelectedTemplate(key)}
                       style={{
                         cursor: "pointer",
-                        background: selectedTemplate === key ? `linear-gradient(135deg, ${template.style.accent}20, rgba(255,255,255,0.03))` : "rgba(255,255,255,0.03)",
-                        border: selectedTemplate === key ? `2px solid ${template.style.accent}` : "1px solid rgba(255,255,255,0.08)",
-                        borderRadius: 16,
+                        background: selectedTemplate === key ? `linear-gradient(135deg, ${template.style.accent}15, #fff)` : "#fff",
+                        border: selectedTemplate === key ? `2px solid ${template.style.accent}` : "1px solid #e2e8f0",
+                        borderRadius: 20,
                         padding: 20,
-                        transition: "all 0.3s ease"
+                        transition: "all 0.3s ease",
+                        boxShadow: selectedTemplate === key ? `0 4px 12px ${template.style.accent}20` : "0 1px 3px rgba(0,0,0,0.05)"
                       }}
                     >
                       <div style={{
-                        height: 200,
+                        height: 180,
                         background: template.preview,
-                        borderRadius: 12,
+                        borderRadius: 16,
                         marginBottom: 16,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         color: "#fff",
                         fontSize: 14,
-                        fontWeight: 600
+                        fontWeight: 600,
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
                       }}>
-                        {template.name} Template
+                        {template.name}
                       </div>
-                      <h4 style={{ color: "#fff", marginBottom: 4 }}>{template.name}</h4>
-                      <p style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>Professional & ATS-friendly</p>
+                      <h4 style={{ color: "#0f172a", marginBottom: 4, fontSize: 16, fontWeight: 700 }}>{template.name}</h4>
+                      <p style={{ fontSize: 12, color: "#64748b" }}>Professional & ATS-friendly</p>
                       {selectedTemplate === key && (
-                        <div style={{ marginTop: 12, color: template.style.accent, fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}>
+                        <motion.div 
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          style={{ marginTop: 12, color: template.style.accent, fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}
+                        >
                           <Check size={14} /> Selected
-                        </div>
+                        </motion.div>
                       )}
-                    </div>
+                    </motion.div>
                   ))}
                 </motion.div>
               )}
 
               {activeTab === "ats" && atsScore && (
                 <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
                   style={{
-                    background: "rgba(255,255,255,0.03)",
-                    border: "1px solid rgba(255,255,255,0.08)",
+                    background: "#fff",
                     borderRadius: 20,
-                    padding: 24
+                    padding: 28,
+                    border: "1px solid #e2e8f0",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.05)"
                   }}
                 >
-                  <h3 style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
-                    <Target size={18} color="#00ffa3" /> ATS Score Analysis
+                  <h3 style={{ fontSize: 18, fontWeight: 700, color: "#0f172a", marginBottom: 24, display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ width: 32, height: 32, background: "linear-gradient(135deg, #6366f1, #8b5cf6)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <Target size={16} color="#fff" />
+                    </div>
+                    ATS Score Analysis
                   </h3>
                   
                   {/* Score Circle */}
-                  <div style={{ textAlign: "center", marginBottom: 30 }}>
-                    <div style={{
-                      width: 150,
-                      height: 150,
-                      margin: "0 auto",
-                      position: "relative"
-                    }}>
-                      <svg width="150" height="150">
-                        <circle cx="75" cy="75" r="65" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="10"/>
+                  <div style={{ textAlign: "center", marginBottom: 32 }}>
+                    <motion.div 
+                      animate={animateScore ? { scale: [1, 1.05, 1] } : {}}
+                      style={{
+                        width: 180,
+                        height: 180,
+                        margin: "0 auto",
+                        position: "relative"
+                      }}
+                    >
+                      <svg width="180" height="180">
+                        <circle cx="90" cy="90" r="78" fill="none" stroke="#e2e8f0" strokeWidth="12"/>
                         <circle
-                          cx="75" cy="75" r="65"
+                          cx="90" cy="90" r="78"
                           fill="none"
                           stroke={getATSScoreColor()}
-                          strokeWidth="10"
-                          strokeDasharray={`${2 * Math.PI * 65 * (atsScore.overall / 100)} ${2 * Math.PI * 65}`}
+                          strokeWidth="12"
+                          strokeDasharray={`${2 * Math.PI * 78 * (atsScore.overall / 100)} ${2 * Math.PI * 78}`}
                           strokeLinecap="round"
-                          transform="rotate(-90 75 75)"
-                          style={{ transition: "stroke-dasharray 1s ease" }}
+                          transform="rotate(-90 90 90)"
+                          style={{ transition: "stroke-dasharray 0.8s ease" }}
                         />
                       </svg>
                       <div style={{
@@ -857,18 +1017,24 @@ export default function ResumeBuilder() {
                         transform: "translate(-50%, -50%)",
                         textAlign: "center"
                       }}>
-                        <span style={{ fontSize: 36, fontWeight: 800, color: getATSScoreColor() }}>{atsScore.overall}</span>
-                        <span style={{ fontSize: 14, color: "rgba(255,255,255,0.5)" }}>/100</span>
+                        <motion.span 
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          style={{ fontSize: 44, fontWeight: 800, color: getATSScoreColor() }}
+                        >
+                          {atsScore.overall}
+                        </motion.span>
+                        <span style={{ fontSize: 14, color: "#64748b" }}>/100</span>
                       </div>
-                    </div>
+                    </motion.div>
                     <div style={{
                       display: "inline-block",
                       marginTop: 12,
-                      padding: "4px 12px",
-                      background: `${getATSScoreColor()}20`,
-                      borderRadius: 20,
+                      padding: "4px 16px",
+                      background: `${getATSScoreColor()}15`,
+                      borderRadius: 24,
                       color: getATSScoreColor(),
-                      fontSize: 12,
+                      fontSize: 13,
                       fontWeight: 600
                     }}>
                       {atsScore.level}
@@ -876,194 +1042,238 @@ export default function ResumeBuilder() {
                   </div>
 
                   {/* Score Breakdown */}
-                  <div style={{ marginBottom: 24 }}>
-                    <h4 style={{ fontSize: 14, fontWeight: 600, color: "#fff", marginBottom: 12 }}>Score Breakdown</h4>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  <div style={{ marginBottom: 28 }}>
+                    <h4 style={{ fontSize: 14, fontWeight: 600, color: "#0f172a", marginBottom: 16 }}>Score Breakdown</h4>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                       <div>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.7)" }}>Resume Completeness</span>
-                          <span style={{ fontSize: 12, color: "#00ffa3" }}>{Math.round(atsScore.sections.completeness)}%</span>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                          <span style={{ fontSize: 13, color: "#475569" }}>Resume Completeness</span>
+                          <span style={{ fontSize: 13, fontWeight: 600, color: "#6366f1" }}>{Math.round(atsScore.sections.completeness)}%</span>
                         </div>
-                        <div style={{ height: 6, background: "rgba(255,255,255,0.1)", borderRadius: 3, overflow: "hidden" }}>
-                          <div style={{ width: `${atsScore.sections.completeness}%`, height: "100%", background: "#00ffa3", borderRadius: 3 }} />
+                        <div style={{ height: 8, background: "#e2e8f0", borderRadius: 4, overflow: "hidden" }}>
+                          <motion.div 
+                            initial={{ width: 0 }}
+                            animate={{ width: `${atsScore.sections.completeness}%` }}
+                            transition={{ duration: 0.5 }}
+                            style={{ height: "100%", background: "#6366f1", borderRadius: 4 }} 
+                          />
                         </div>
                       </div>
                       <div>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.7)" }}>Keyword Optimization</span>
-                          <span style={{ fontSize: 12, color: "#00c9ff" }}>{Math.round(atsScore.sections.keywordMatch)}%</span>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                          <span style={{ fontSize: 13, color: "#475569" }}>Keyword Optimization</span>
+                          <span style={{ fontSize: 13, fontWeight: 600, color: "#8b5cf6" }}>{Math.round(atsScore.sections.keywordMatch)}%</span>
                         </div>
-                        <div style={{ height: 6, background: "rgba(255,255,255,0.1)", borderRadius: 3, overflow: "hidden" }}>
-                          <div style={{ width: `${atsScore.sections.keywordMatch}%`, height: "100%", background: "#00c9ff", borderRadius: 3 }} />
+                        <div style={{ height: 8, background: "#e2e8f0", borderRadius: 4, overflow: "hidden" }}>
+                          <motion.div 
+                            initial={{ width: 0 }}
+                            animate={{ width: `${atsScore.sections.keywordMatch}%` }}
+                            transition={{ duration: 0.5 }}
+                            style={{ height: "100%", background: "#8b5cf6", borderRadius: 4 }} 
+                          />
                         </div>
                       </div>
                     </div>
                   </div>
 
                   {/* Keywords Found */}
-                  <div style={{ marginBottom: 24 }}>
-                    <h4 style={{ fontSize: 14, fontWeight: 600, color: "#fff", marginBottom: 12 }}>Keywords Detected</h4>
+                  <div style={{ marginBottom: 28 }}>
+                    <h4 style={{ fontSize: 14, fontWeight: 600, color: "#0f172a", marginBottom: 12 }}>Keywords Detected</h4>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                       {atsScore.keywords.map((keyword, idx) => (
-                        <span key={idx} style={{
-                          background: "rgba(0,255,163,0.1)",
-                          border: "1px solid rgba(0,255,163,0.3)",
-                          borderRadius: 20,
-                          padding: "4px 10px",
-                          fontSize: 11,
-                          color: "#00ffa3"
-                        }}>
+                        <motion.span
+                          key={idx}
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: idx * 0.02 }}
+                          style={{
+                            background: "#f1f5f9",
+                            borderRadius: 20,
+                            padding: "5px 12px",
+                            fontSize: 11,
+                            color: "#475569",
+                            fontWeight: 500
+                          }}
+                        >
                           {keyword}
-                        </span>
+                        </motion.span>
                       ))}
                     </div>
                   </div>
 
                   {/* Suggestions */}
                   <div>
-                    <h4 style={{ fontSize: 14, fontWeight: 600, color: "#fff", marginBottom: 12 }}>Improvement Suggestions</h4>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    <h4 style={{ fontSize: 14, fontWeight: 600, color: "#0f172a", marginBottom: 12 }}>Improvement Suggestions</h4>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                       {atsScore.suggestions.map((suggestion, idx) => (
-                        <div key={idx} style={{ display: "flex", alignItems: "center", gap: 8, padding: 8, background: "rgba(255,75,110,0.05)", borderRadius: 8 }}>
-                          <AlertCircle size={14} color="#ff4b6e" />
-                          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.7)" }}>{suggestion}</span>
+                        <div key={idx} style={{ display: "flex", alignItems: "center", gap: 10, padding: 12, background: "#fef2f2", borderRadius: 12 }}>
+                          <AlertCircle size={14} color="#ef4444" />
+                          <span style={{ fontSize: 12, color: "#991b1b" }}>{suggestion}</span>
                         </div>
                       ))}
                       {atsScore.suggestions.length === 0 && (
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: 8, background: "rgba(0,255,163,0.05)", borderRadius: 8 }}>
-                          <Check size={14} color="#00ffa3" />
-                          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.7)" }}>Your resume looks great! Ready for applications.</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: 12, background: "#ecfdf5", borderRadius: 12 }}>
+                          <Check size={14} color="#10b981" />
+                          <span style={{ fontSize: 12, color: "#065f46" }}>Your resume looks great! Ready for applications.</span>
                         </div>
                       )}
                     </div>
                   </div>
                 </motion.div>
               )}
-            </div>
+            </motion.div>
 
             {/* Right Panel - Preview */}
-            <div style={{ position: "sticky", top: 20, height: "fit-content" }}>
+            <div style={{ position: "sticky", top: 24, height: "fit-content" }}>
               <div style={{
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.08)",
+                background: "#fff",
                 borderRadius: 20,
-                overflow: "hidden"
+                border: "1px solid #e2e8f0",
+                overflow: "hidden",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.05)"
               }}>
                 <div style={{
                   padding: 16,
-                  borderBottom: "1px solid rgba(255,255,255,0.08)",
+                  borderBottom: "1px solid #e2e8f0",
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "space-between"
+                  justifyContent: "space-between",
+                  background: "#f8fafc"
                 }}>
-                  <h3 style={{ fontSize: 14, fontWeight: 600, color: "#fff", display: "flex", alignItems: "center", gap: 6 }}>
-                    <Eye size={14} color="#00ffa3" /> Live Preview
+                  <h3 style={{ fontSize: 14, fontWeight: 600, color: "#0f172a", display: "flex", alignItems: "center", gap: 6 }}>
+                    <Eye size={14} color="#6366f1" /> Live Preview
                   </h3>
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => setShowPreview(!showPreview)}
                     style={{
-                      padding: "4px 12px",
-                      background: "rgba(0,255,163,0.1)",
-                      border: "1px solid rgba(0,255,163,0.3)",
-                      borderRadius: 6,
-                      color: "#00ffa3",
+                      padding: "6px 14px",
+                      background: "#fff",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: 8,
+                      color: "#6366f1",
                       fontSize: 11,
-                      cursor: "pointer"
+                      cursor: "pointer",
+                      fontWeight: 500,
+                      transition: "all 0.2s"
                     }}
                   >
                     {showPreview ? "Hide" : "Show"} Preview
-                  </button>
+                  </motion.button>
                 </div>
                 
-                {showPreview && (
-                  <div style={{ padding: 20, maxHeight: "calc(100vh - 200px)", overflowY: "auto" }}>
-                    {/* Resume Preview */}
-                    <div style={{
-                      background: "#fff",
-                      borderRadius: 12,
-                      padding: 24,
-                      color: "#333",
-                      fontFamily: TEMPLATES[selectedTemplate].style.font
-                    }}>
-                      {/* Header */}
-                      <div style={{
-                        background: TEMPLATES[selectedTemplate].style.headerBg,
-                        margin: "-24px -24px 20px -24px",
-                        padding: "24px",
-                        color: "#fff"
-                      }}>
-                        <h1 style={{ fontSize: 28, marginBottom: 4 }}>{resumeData.personal.name || "Your Name"}</h1>
-                        <p style={{ fontSize: 14, opacity: 0.9 }}>{resumeData.personal.title || "Professional Title"}</p>
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 12, fontSize: 11 }}>
-                          {resumeData.personal.email && <span>{resumeData.personal.email}</span>}
-                          {resumeData.personal.phone && <span>{resumeData.personal.phone}</span>}
-                          {resumeData.personal.location && <span>{resumeData.personal.location}</span>}
+                <AnimatePresence>
+                  {showPreview && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      style={{ overflow: "hidden" }}
+                    >
+                      <div style={{ padding: 24, maxHeight: "calc(100vh - 200px)", overflowY: "auto" }}>
+                        {/* Resume Preview */}
+                        <div style={{
+                          background: "#fff",
+                          borderRadius: 16,
+                          padding: 28,
+                          color: "#1e293b",
+                          fontFamily: TEMPLATES[selectedTemplate].style.font,
+                          border: "1px solid #e2e8f0",
+                          boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)"
+                        }}>
+                          {/* Header */}
+                          <div style={{
+                            background: TEMPLATES[selectedTemplate].style.headerBg,
+                            margin: "-28px -28px 24px -28px",
+                            padding: "28px",
+                            color: "#fff",
+                            borderRadius: "16px 16px 0 0"
+                          }}>
+                            <h1 style={{ fontSize: 28, marginBottom: 8, fontWeight: 800 }}>{resumeData.personal.name || "Your Name"}</h1>
+                            <p style={{ fontSize: 14, opacity: 0.9 }}>{resumeData.personal.title || "Professional Title"}</p>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: 16, marginTop: 16, fontSize: 12, opacity: 0.85 }}>
+                              {resumeData.personal.email && <span>📧 {resumeData.personal.email}</span>}
+                              {resumeData.personal.phone && <span>📱 {resumeData.personal.phone}</span>}
+                              {resumeData.personal.location && <span>📍 {resumeData.personal.location}</span>}
+                            </div>
+                          </div>
+                          
+                          {/* Summary */}
+                          {resumeData.summary && (
+                            <div style={{ marginBottom: 20 }}>
+                              <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 10, color: TEMPLATES[selectedTemplate].style.accent, borderLeft: `3px solid ${TEMPLATES[selectedTemplate].style.accent}`, paddingLeft: 10 }}>
+                                Professional Summary
+                              </h3>
+                              <p style={{ fontSize: 13, lineHeight: 1.6, color: "#475569" }}>{resumeData.summary}</p>
+                            </div>
+                          )}
+                          
+                          {/* Experience */}
+                          {resumeData.experience.length > 0 && (
+                            <div style={{ marginBottom: 20 }}>
+                              <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 10, color: TEMPLATES[selectedTemplate].style.accent, borderLeft: `3px solid ${TEMPLATES[selectedTemplate].style.accent}`, paddingLeft: 10 }}>
+                                Work Experience
+                              </h3>
+                              {resumeData.experience.map((exp, idx) => (
+                                <div key={idx} style={{ marginBottom: 16 }}>
+                                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                                    <strong style={{ fontSize: 14, color: "#0f172a" }}>{exp.role}</strong>
+                                    <span style={{ fontSize: 11, color: "#64748b" }}>{exp.duration}</span>
+                                  </div>
+                                  <p style={{ fontSize: 12, color: "#475569", marginBottom: 6 }}>{exp.company}</p>
+                                  <p style={{ fontSize: 12, lineHeight: 1.5, color: "#64748b" }}>{exp.description}</p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          
+                          {/* Education */}
+                          {resumeData.education.length > 0 && (
+                            <div style={{ marginBottom: 20 }}>
+                              <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 10, color: TEMPLATES[selectedTemplate].style.accent, borderLeft: `3px solid ${TEMPLATES[selectedTemplate].style.accent}`, paddingLeft: 10 }}>
+                                Education
+                              </h3>
+                              {resumeData.education.map((edu, idx) => (
+                                <div key={idx} style={{ marginBottom: 12 }}>
+                                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                                    <strong style={{ fontSize: 14, color: "#0f172a" }}>{edu.degree}</strong>
+                                    <span style={{ fontSize: 11, color: "#64748b" }}>{edu.year}</span>
+                                  </div>
+                                  <p style={{ fontSize: 12, color: "#475569" }}>{edu.institution}</p>
+                                  {edu.cgpa && <p style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>CGPA: {edu.cgpa}</p>}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          
+                          {/* Skills */}
+                          {resumeData.skills.length > 0 && (
+                            <div>
+                              <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 10, color: TEMPLATES[selectedTemplate].style.accent, borderLeft: `3px solid ${TEMPLATES[selectedTemplate].style.accent}`, paddingLeft: 10 }}>
+                                Skills
+                              </h3>
+                              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                                {resumeData.skills.map((skill, idx) => (
+                                  <span key={idx} style={{
+                                    background: `${TEMPLATES[selectedTemplate].style.accent}15`,
+                                    color: TEMPLATES[selectedTemplate].style.accent,
+                                    padding: "5px 12px",
+                                    borderRadius: 20,
+                                    fontSize: 11,
+                                    fontWeight: 500
+                                  }}>
+                                    {skill}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
-                      
-                      {/* Summary */}
-                      {resumeData.summary && (
-                        <div style={{ marginBottom: 16 }}>
-                          <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 8, color: TEMPLATES[selectedTemplate].style.accent }}>Professional Summary</h3>
-                          <p style={{ fontSize: 12, lineHeight: 1.5 }}>{resumeData.summary}</p>
-                        </div>
-                      )}
-                      
-                      {/* Experience */}
-                      {resumeData.experience.length > 0 && (
-                        <div style={{ marginBottom: 16 }}>
-                          <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 8, color: TEMPLATES[selectedTemplate].style.accent }}>Work Experience</h3>
-                          {resumeData.experience.map((exp, idx) => (
-                            <div key={idx} style={{ marginBottom: 12 }}>
-                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-                                <strong style={{ fontSize: 13 }}>{exp.role}</strong>
-                                <span style={{ fontSize: 11, color: "#666" }}>{exp.duration}</span>
-                              </div>
-                              <p style={{ fontSize: 12, color: "#666", marginBottom: 2 }}>{exp.company}</p>
-                              <p style={{ fontSize: 11, lineHeight: 1.4 }}>{exp.description}</p>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      
-                      {/* Education */}
-                      {resumeData.education.length > 0 && (
-                        <div style={{ marginBottom: 16 }}>
-                          <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 8, color: TEMPLATES[selectedTemplate].style.accent }}>Education</h3>
-                          {resumeData.education.map((edu, idx) => (
-                            <div key={idx} style={{ marginBottom: 8 }}>
-                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
-                                <strong style={{ fontSize: 13 }}>{edu.degree}</strong>
-                                <span style={{ fontSize: 11, color: "#666" }}>{edu.year}</span>
-                              </div>
-                              <p style={{ fontSize: 12, color: "#666" }}>{edu.institution}</p>
-                              {edu.cgpa && <p style={{ fontSize: 11 }}>CGPA: {edu.cgpa}</p>}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      
-                      {/* Skills */}
-                      {resumeData.skills.length > 0 && (
-                        <div>
-                          <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 8, color: TEMPLATES[selectedTemplate].style.accent }}>Skills</h3>
-                          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                            {resumeData.skills.map((skill, idx) => (
-                              <span key={idx} style={{
-                                background: `${TEMPLATES[selectedTemplate].style.accent}20`,
-                                padding: "4px 10px",
-                                borderRadius: 20,
-                                fontSize: 11
-                              }}>
-                                {skill}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
           </div>
