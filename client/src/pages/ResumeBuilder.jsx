@@ -2,10 +2,11 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   ArrowLeft, Download, Eye, Edit2, Trash2, Plus, 
-  X, Check, AlertCircle, Target, 
+  X, Check, AlertCircle, Target, Trophy,
   FileText, User, Briefcase, GraduationCap,
   Sparkles, Layout, Sparkle, Lock, Crown,
-  Save, CreditCard, Zap
+  Save, CreditCard, Zap, Mail, Phone, MapPin, Linkedin, Globe,
+  Award, Code, BookOpen, Calendar, Clock
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
