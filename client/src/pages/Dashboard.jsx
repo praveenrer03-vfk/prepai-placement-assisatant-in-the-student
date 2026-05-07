@@ -424,7 +424,7 @@ export default function Dashboard() {
               <div style={{ width: 34, height: 34, borderRadius: 10, background: "linear-gradient(135deg,#00ffa3,#00c9ff)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Zap size={17} color="#060610" />
               </div>
-              <span style={{ color: "#fff", fontSize: T.md, fontWeight: 800, letterSpacing: "-0.02em" }}>PrepAI</span>
+              <span style={{ color: "#fff", fontSize: T.md, fontWeight: 800, letterSpacing: "-0.02em" }}>Campus Craze</span>
             </div>
 
             {/* Search Bar */}
