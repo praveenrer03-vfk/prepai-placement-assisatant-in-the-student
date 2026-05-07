@@ -40,6 +40,20 @@ const PublicRoute = ({ children }) => {
   return children;
 };
 
+// Add this component to handle subscription redirects
+const SubscriptionRedirect = () => {
+  const subscriptionPlan = localStorage.getItem("subscriptionPlan");
+  const subscriptionStatus = localStorage.getItem("subscriptionStatus");
+  
+  // If user already has an active subscription, redirect to resume builder
+  if (subscriptionStatus === "active" && subscriptionPlan !== "free") {
+    return <Navigate to="/resume-builder" replace />;
+  }
+  
+  // Otherwise show subscription page
+  return <Subscription />;
+};
+
 function App() {
   return (
     <BrowserRouter>
@@ -102,9 +116,10 @@ function App() {
             </ProtectedRoute>
           } />
           
+          {/* Subscription route with redirect logic */}
           <Route path="/subscription" element={
             <ProtectedRoute requireAuth={true}>
-              <Subscription />
+              <SubscriptionRedirect />
             </ProtectedRoute>
           } />
           

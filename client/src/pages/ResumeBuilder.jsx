@@ -4,11 +4,11 @@ import {
   ArrowLeft, Download, Eye, Edit2, Trash2, Plus, 
   X, Check, AlertCircle, Target, 
   FileText, User, Briefcase, GraduationCap,
-  Sparkles, FileCheck, Layout, Sparkle, Lock
+  Sparkles, FileCheck, Layout, Sparkle, Lock, Crown
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-// ... (keep all your existing imports and TEMPLATES, analyzeATS function, etc.)
+// ... (keep all your existing TEMPLATES, analyzeATS function, etc.)
 
 export default function ResumeBuilder() {
   const navigate = useNavigate();
@@ -23,7 +23,7 @@ export default function ResumeBuilder() {
   
   const previewRef = useRef(null);
   
-  // ... (keep all your state and functions)
+  // ... (keep all your existing state and functions)
 
   // Check subscription status on mount
   useEffect(() => {
@@ -32,7 +32,7 @@ export default function ResumeBuilder() {
     
     if (subscriptionStatus === "active") {
       setSubscription({
-        plan: subscriptionPlan,
+        plan: subscriptionPlan || "free",
         status: "active"
       });
     } else {
@@ -43,26 +43,24 @@ export default function ResumeBuilder() {
     }
   }, []);
 
+  // Check if user has pro access
+  const isPro = () => {
+    return subscription?.plan !== "free" && subscription?.status === "active";
+  };
+
   // Modified exportPDF function with subscription check
   const exportPDF = () => {
-    if (subscription?.plan === "free") {
+    if (!isPro()) {
       setShowProModal(true);
       return;
     }
     
     // Pro feature - implement actual PDF export
     setIsExporting(true);
-    // Your PDF export logic here
     setTimeout(() => {
-      alert("PDF Export feature for Pro users!");
+      alert("PDF Export feature is available for Pro users!");
       setIsExporting(false);
     }, 1000);
-  };
-
-  // Check if feature is available for free users
-  const isProFeature = (feature) => {
-    const proFeatures = ["pdfExport", "premiumTemplates", "advancedAnalytics"];
-    return proFeatures.includes(feature) && subscription?.plan === "free";
   };
 
   // Pro Modal Component
@@ -206,58 +204,144 @@ export default function ResumeBuilder() {
     </AnimatePresence>
   );
 
-  // Add subscription badge to header
+  // Subscription Badge Component
   const SubscriptionBadge = () => (
     <div style={{
       display: "flex",
       alignItems: "center",
       gap: 8,
       padding: "6px 14px",
-      background: subscription?.plan === "free" ? "#f1f5f9" : "linear-gradient(135deg, #6366f1, #8b5cf6)",
+      background: !isPro() ? "#f1f5f9" : "linear-gradient(135deg, #6366f1, #8b5cf6)",
       borderRadius: 20,
       fontSize: 11,
       fontWeight: 600,
-      color: subscription?.plan === "free" ? "#64748b" : "#fff"
-    }}>
-      {subscription?.plan === "free" ? "Free Plan" : `${subscription?.plan} Plan`}
+      color: !isPro() ? "#64748b" : "#fff",
+      cursor: "pointer"
+    }}
+    onClick={() => navigate("/subscription")}
+    >
+      {!isPro() ? (
+        <>
+          <Lock size={12} /> Free Plan
+        </>
+      ) : (
+        <>
+          <Crown size={12} /> {subscription?.plan} Plan
+        </>
+      )}
     </div>
   );
 
-  // Rest of your component remains the same, just add SubscriptionBadge to header
-  // And ensure ProModal is rendered at the end
+  // ... (keep all your existing handlers and JSX)
 
   return (
     <>
-      {/* ... your existing JSX ... */}
-      <div className="resume-container">
-        {/* Header with subscription badge */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Roboto:wght@400;500;700&family=Poppins:wght@400;500;600;700;800&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #f8fafc; font-family: 'Inter', sans-serif; }
+        .resume-container { min-height: 100vh; background: #f8fafc; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); }
+        ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 3px; }
+      `}</style>
+
+      <div className="resume-container" style={{
+        minHeight: "100vh",
+        background: "#f8fafc",
+        position: "relative",
+        overflowX: "hidden"
+      }}>
+        {/* Header */}
         <div style={{ position: "relative", zIndex: 1, maxWidth: 1400, margin: "0 auto", padding: "24px 32px" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32 }}>
-            <button onClick={() => navigate("/dashboard")} style={backButtonStyle}>
+            <button
+              onClick={() => navigate("/dashboard")}
+              style={{
+                width: 40, height: 40, borderRadius: 12,
+                background: "#fff",
+                border: "1px solid #e2e8f0",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", color: "#475569",
+                transition: "all 0.2s"
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = "#f1f5f9"}
+              onMouseLeave={(e) => e.currentTarget.style.background = "#fff"}
+            >
               <ArrowLeft size={20} />
             </button>
             
             <div style={{ textAlign: "center" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "center" }}>
                 <Sparkle size={24} fill="#6366f1" color="#6366f1" />
-                <h1 style={titleStyle}>Resume Builder</h1>
+                <h1 style={{ fontSize: 28, fontWeight: 800, background: "linear-gradient(135deg, #6366f1, #8b5cf6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", letterSpacing: "-0.02em" }}>
+                  Resume Builder
+                </h1>
               </div>
-              <p style={subtitleStyle}>Create ATS-friendly resume & get instant feedback</p>
+              <p style={{ fontSize: 13, color: "#64748b", marginTop: 4 }}>
+                Create ATS-friendly resume & get instant feedback
+              </p>
             </div>
             
             <div style={{ display: "flex", gap: 12 }}>
               <SubscriptionBadge />
-              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={downloadJSON} style={jsonButtonStyle}>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={downloadJSON}
+                style={{
+                  padding: "8px 20px",
+                  background: "#fff",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: 10,
+                  color: "#475569",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  transition: "all 0.2s"
+                }}
+              >
                 <Download size={16} /> Save JSON
               </motion.button>
-              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={exportPDF} style={pdfButtonStyle}>
-                <FileText size={16} /> Export PDF
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={exportPDF}
+                disabled={isExporting}
+                style={{
+                  padding: "8px 20px",
+                  background: !isPro() ? "#cbd5e1" : "linear-gradient(135deg, #6366f1, #8b5cf6)",
+                  border: "none",
+                  borderRadius: 10,
+                  color: !isPro() ? "#94a3b8" : "#fff",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  cursor: !isPro() ? "pointer" : "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  transition: "transform 0.2s, box-shadow 0.2s",
+                  opacity: isExporting ? 0.7 : 1
+                }}
+              >
+                {isExporting ? (
+                  <div style={{ width: 16, height: 16, border: "2px solid #fff", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.6s linear infinite" }} />
+                ) : (
+                  <FileText size={16} />
+                )}
+                Export PDF {!isPro() && "(Pro)"}
               </motion.button>
             </div>
           </div>
-          {/* ... rest of your component ... */}
+
+          {/* ... rest of your component remains the same ... */}
+          
         </div>
       </div>
+
       <ProModal />
     </>
   );
