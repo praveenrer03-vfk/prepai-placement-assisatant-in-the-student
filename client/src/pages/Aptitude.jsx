@@ -658,6 +658,17 @@ const globalStyles = `
   
   @keyframes spin { to { transform: rotate(360deg); } }
 
+  /* Shuffle Animation */
+  @keyframes shuffle {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .shuffle-icon {
+    display: inline-block;
+    animation: shuffle 0.5s ease;
+  }
+
   @media (max-width: 640px) {
     .quiz-card { padding: 28px 20px; }
     .question-text { font-size: 20px; }
@@ -668,11 +679,22 @@ const globalStyles = `
 
 const LETTERS = ["A", "B", "C", "D"];
 
+// Fisher-Yates Shuffle Algorithm
+const shuffleArray = (array) => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
 export default function Aptitude() {
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [quizStarted, setQuizStarted] = useState(false);
   const [fetchTrigger, setFetchTrigger] = useState(0);
 
+  const [originalQuestions, setOriginalQuestions] = useState([]);
   const [questions, setQuestions] = useState([]);
   const [current, setCurrent] = useState(0);
   const [score, setScore] = useState(0);
@@ -680,6 +702,7 @@ export default function Aptitude() {
   const [finished, setFinished] = useState(false);
   const [selected, setSelected] = useState(null);
   const [error, setError] = useState(null);
+  const [isShuffling, setIsShuffling] = useState(false);
 
   const navigate = useNavigate();
 
@@ -720,11 +743,38 @@ export default function Aptitude() {
       })
       .then(data => {
         if (!data || data.length === 0) throw new Error("No questions found for this topic");
-        setQuestions(data);
+        setOriginalQuestions(data);
+        // Shuffle questions when first loaded
+        const shuffled = shuffleArray(data);
+        setQuestions(shuffled);
       })
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
   }, [fetchTrigger]);
+
+  // Function to reshuffle remaining questions
+  const reshuffleQuestions = () => {
+    if (questions.length === 0) return;
+    
+    setIsShuffling(true);
+    
+    // Get current question and remaining questions
+    const currentQuestion = questions[current];
+    const remainingQuestions = questions.slice(current + 1);
+    
+    // Shuffle remaining questions
+    const shuffledRemaining = shuffleArray(remainingQuestions);
+    
+    // Reconstruct questions array with current question first, then shuffled remaining
+    const newQuestions = [currentQuestion, ...shuffledRemaining];
+    setQuestions(newQuestions);
+    
+    // Reset current index to 0 (since we're at the current question)
+    setCurrent(0);
+    setSelected(null);
+    
+    setTimeout(() => setIsShuffling(false), 500);
+  };
 
   const startQuiz = () => {
     if (!selectedTopic) return;
@@ -733,6 +783,7 @@ export default function Aptitude() {
     setSelected(null);
     setFinished(false);
     setQuestions([]);
+    setOriginalQuestions([]);
     setError(null);
     setQuizStarted(true);
     setFetchTrigger(prev => prev + 1);
@@ -742,6 +793,7 @@ export default function Aptitude() {
     setQuizStarted(false);
     setSelectedTopic(null);
     setQuestions([]);
+    setOriginalQuestions([]);
     setCurrent(0);
     setScore(0);
     setSelected(null);
@@ -755,9 +807,14 @@ export default function Aptitude() {
     setScore(0);
     setSelected(null);
     setFinished(false);
-    setQuestions([]);
+    // Reshuffle all questions when retrying
+    if (originalQuestions.length > 0) {
+      const reshuffledAll = shuffleArray(originalQuestions);
+      setQuestions(reshuffledAll);
+    } else {
+      setFetchTrigger(prev => prev + 1);
+    }
     setError(null);
-    setFetchTrigger(prev => prev + 1);
   };
 
   const handleAnswer = (opt) => {
@@ -950,8 +1007,37 @@ export default function Aptitude() {
           </div>
         </div>
 
-        <div className="topic-chip">
-          {selectedTopic.icon} {selectedTopic.label}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <div className="topic-chip">
+            {selectedTopic.icon} {selectedTopic.label}
+          </div>
+          
+          {/* Shuffle Button for Remaining Questions */}
+          {selected === null && questions.length - current > 1 && (
+            <motion.button
+              onClick={reshuffleQuestions}
+              disabled={isShuffling}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                background: "rgba(139,92,246,0.15)",
+                border: "1px solid rgba(139,92,246,0.3)",
+                borderRadius: 50,
+                padding: "6px 14px",
+                fontSize: 12,
+                fontWeight: 500,
+                color: THEME.primary,
+                cursor: isShuffling ? "not-allowed" : "pointer",
+                transition: "all 0.3s",
+              }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <span className={isShuffling ? "shuffle-icon" : ""}>🔄</span>
+              {isShuffling ? "Shuffling..." : "Shuffle Remaining"}
+            </motion.button>
+          )}
         </div>
 
         <p className="question-label">Question {current + 1}</p>
@@ -1024,6 +1110,25 @@ export default function Aptitude() {
             </motion.button>
           )}
         </AnimatePresence>
+
+        {/* Shuffle Info Badge */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          style={{
+            marginTop: 16,
+            padding: "10px 16px",
+            background: "rgba(139,92,246,0.08)",
+            borderRadius: 12,
+            textAlign: "center",
+            fontSize: 11,
+            color: "rgba(226,232,240,0.4)",
+            border: "1px solid rgba(139,92,246,0.15)",
+          }}
+        >
+          🔄 Questions are shuffled randomly each time you start or reshuffle
+        </motion.div>
       </motion.div>
     </div>
   );
