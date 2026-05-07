@@ -100,8 +100,7 @@ export default function ResumeBuilder() {
   const [showPreview, setShowPreview] = useState(true);
   const [atsScore, setAtsScore] = useState(null);
   const [animateScore, setAnimateScore] = useState(false);
-  const [showProModal, setShowProModal] = useState(false);
-  const [subscription, setSubscription] = useState(null);
+  const [isPro, setIsPro] = useState(false);
   const [saved, setSaved] = useState(false);
   
   const previewRef = useRef(null);
@@ -131,21 +130,16 @@ export default function ResumeBuilder() {
   const [newEducation, setNewEducation] = useState({ institution: "", degree: "", year: "", cgpa: "" });
   const [newSkill, setNewSkill] = useState("");
 
-  // Check subscription status on mount
+  // Check subscription status on mount (using localStorage for demo)
   useEffect(() => {
-    const subscriptionPlan = localStorage.getItem("subscriptionPlan");
     const subscriptionStatus = localStorage.getItem("subscriptionStatus");
+    const subscriptionPlan = localStorage.getItem("subscriptionPlan");
     
-    if (subscriptionStatus === "active") {
-      setSubscription({
-        plan: subscriptionPlan || "free",
-        status: "active"
-      });
+    if (subscriptionStatus === "active" && subscriptionPlan !== "free") {
+      setIsPro(true);
     } else {
-      setSubscription({
-        plan: "free",
-        status: "active"
-      });
+      // Default to free plan
+      setIsPro(false);
     }
   }, []);
 
@@ -176,11 +170,6 @@ export default function ResumeBuilder() {
     const timer = setTimeout(() => setAnimateScore(false), 500);
     return () => clearTimeout(timer);
   }, [resumeData]);
-
-  // Check if user has pro access
-  const isPro = () => {
-    return subscription?.plan !== "free" && subscription?.status === "active";
-  };
 
   // Handlers
   const updatePersonalInfo = (field, value) => {
@@ -248,7 +237,7 @@ export default function ResumeBuilder() {
     setSaved(false);
   };
 
-  // Save JSON - FREE FEATURE (No redirect)
+  // Save JSON - FREE FEATURE
   const downloadJSON = () => {
     const resumeJSON = JSON.stringify(resumeData, null, 2);
     const blob = new Blob([resumeJSON], { type: "application/json" });
@@ -262,184 +251,51 @@ export default function ResumeBuilder() {
     setTimeout(() => setSaved(false), 3000);
   };
 
-  // Export PDF - PRO FEATURE (Redirect to subscription/payment)
+  // Export PDF - PRO FEATURE (shows upgrade message for free users)
   const exportPDF = () => {
-    // Check if user has pro subscription
-    if (!isPro()) {
-      // Redirect to subscription/payment page
-      setShowProModal(true);
+    if (!isPro) {
+      alert("PDF Export is a Pro feature. Please upgrade to Pro plan to unlock this feature!");
       return;
     }
-    
     // If pro user, proceed with PDF export
     alert("PDF Export feature for Pro users - Coming soon!");
   };
 
-  // Pro Modal - Redirects to Payment/Subscription
-  const ProModal = () => (
-    <AnimatePresence>
-      {showProModal && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0,0,0,0.8)",
-            backdropFilter: "blur(8px)",
-            zIndex: 1000,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "20px"
-          }}
-          onClick={() => setShowProModal(false)}
-        >
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            style={{
-              background: "#fff",
-              borderRadius: 28,
-              maxWidth: 500,
-              width: "100%",
-              overflow: "hidden"
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{
-              background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-              padding: "32px",
-              textAlign: "center",
-              color: "#fff"
-            }}>
-              <div style={{
-                width: 80,
-                height: 80,
-                background: "rgba(255,255,255,0.2)",
-                borderRadius: "50%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                margin: "0 auto 20px"
-              }}>
-                <Crown size={40} color="#fff" />
-              </div>
-              <h2 style={{ fontSize: 28, fontWeight: 800, marginBottom: 8 }}>Premium Feature</h2>
-              <p style={{ fontSize: 14, opacity: 0.9 }}>Upgrade to export your resume as PDF</p>
-            </div>
-            
-            <div style={{ padding: "32px" }}>
-              <div style={{ marginBottom: 24 }}>
-                <h3 style={{ fontSize: 18, fontWeight: 700, color: "#0f172a", marginBottom: 16 }}>✨ Premium Benefits:</h3>
-                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                  {[
-                    "Export to PDF with professional templates",
-                    "High-quality print-ready resumes",
-                    "Multiple premium template designs",
-                    "Advanced ATS optimization",
-                    "Unlimited resume downloads",
-                    "Priority support"
-                  ].map((benefit, idx) => (
-                    <div key={idx} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <div style={{ width: 20, height: 20, background: "#10b981", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <Check size={12} color="#fff" />
-                      </div>
-                      <span style={{ fontSize: 13, color: "#475569" }}>{benefit}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              <div style={{ marginBottom: 24, padding: "16px", background: "#f8fafc", borderRadius: 16, textAlign: "center" }}>
-                <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: 4 }}>
-                  <span style={{ fontSize: 36, fontWeight: 800, color: "#6366f1" }}>$9</span>
-                  <span style={{ fontSize: 14, color: "#64748b" }}>/month</span>
-                </div>
-                <p style={{ fontSize: 12, color: "#94a3b8", marginTop: 8 }}>Cancel anytime • No questions asked</p>
-              </div>
-              
-              <div style={{ display: "flex", gap: 12 }}>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setShowProModal(false)}
-                  style={{
-                    flex: 1,
-                    padding: "14px",
-                    background: "#f1f5f9",
-                    border: "none",
-                    borderRadius: 12,
-                    color: "#475569",
-                    fontSize: 14,
-                    fontWeight: 600,
-                    cursor: "pointer"
-                  }}
-                >
-                  Maybe Later
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => {
-                    setShowProModal(false);
-                    // Redirect to payment/subscription page
-                    navigate("/payment");
-                  }}
-                  style={{
-                    flex: 1,
-                    padding: "14px",
-                    background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-                    border: "none",
-                    borderRadius: 12,
-                    color: "#fff",
-                    fontSize: 14,
-                    fontWeight: 700,
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 8
-                  }}
-                >
-                  Upgrade Now →
-                </motion.button>
-              </div>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
+  // Upgrade to Pro - Just updates local state for demo
+  const upgradeToPro = () => {
+    setIsPro(true);
+    localStorage.setItem("subscriptionStatus", "active");
+    localStorage.setItem("subscriptionPlan", "pro");
+    alert("🎉 You've upgraded to Pro! PDF export feature is now available.");
+  };
 
-  // Subscription Badge Component
+  // Subscription Badge Component - Click now shows upgrade option on same page
   const SubscriptionBadge = () => (
     <div style={{
       display: "flex",
       alignItems: "center",
       gap: 8,
       padding: "6px 14px",
-      background: !isPro() ? "#f1f5f9" : "linear-gradient(135deg, #6366f1, #8b5cf6)",
+      background: !isPro ? "#f1f5f9" : "linear-gradient(135deg, #6366f1, #8b5cf6)",
       borderRadius: 20,
       fontSize: 11,
       fontWeight: 600,
-      color: !isPro() ? "#64748b" : "#fff",
+      color: !isPro ? "#64748b" : "#fff",
       cursor: "pointer"
     }}
-    onClick={() => navigate("/payment")}
+    onClick={() => {
+      if (!isPro) {
+        upgradeToPro();
+      }
+    }}
     >
-      {!isPro() ? (
+      {!isPro ? (
         <>
-          <Lock size={12} /> Free Plan
+          <Lock size={12} /> Free Plan (Click to Upgrade)
         </>
       ) : (
         <>
-          <Crown size={12} /> {subscription?.plan} Plan
+          <Crown size={12} /> Pro Plan
         </>
       )}
     </div>
@@ -484,21 +340,23 @@ export default function ResumeBuilder() {
         </div>
         
         {/* Summary */}
-        {resumeData.summary && (
-          <div style={{ marginBottom: "25px" }}>
-            <h3 style={{ 
-              fontSize: "18px", 
-              fontWeight: 700, 
-              marginBottom: "12px", 
-              color: template.style.accent,
-              borderLeft: `3px solid ${template.style.accent}`,
-              paddingLeft: "12px"
-            }}>
-              Professional Summary
-            </h3>
-            <p style={{ fontSize: "14px", lineHeight: 1.6, color: "#475569" }}>{resumeData.summary}</p>
-          </div>
-        )}
+        if (resumeData.summary) {
+          return (
+            <div style={{ marginBottom: "25px" }}>
+              <h3 style={{ 
+                fontSize: "18px", 
+                fontWeight: 700, 
+                marginBottom: "12px", 
+                color: template.style.accent,
+                borderLeft: `3px solid ${template.style.accent}`,
+                paddingLeft: "12px"
+              }}>
+                Professional Summary
+              </h3>
+              <p style={{ fontSize: "14px", lineHeight: 1.6, color: "#475569" }}>{resumeData.summary}</p>
+            </div>
+          );
+        }
         
         {/* Experience */}
         {resumeData.experience.length > 0 && (
@@ -1543,8 +1401,6 @@ export default function ResumeBuilder() {
           </div>
         </div>
       </div>
-
-      <ProModal />
     </>
   );
 }
