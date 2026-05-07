@@ -197,7 +197,7 @@ export default function LoginModern() {
                   fontWeight: "700", 
                   margin: 0 
                 }}>
-                  PrepAI
+                  CAMPUS CRAZE
                 </h2>
               </motion.div>
 
