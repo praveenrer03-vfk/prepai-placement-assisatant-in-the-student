@@ -1,11 +1,26 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { 
-  ArrowLeft, Trophy, Crown, Medal, TrendingUp, 
-  Flame, Target, Award, Users, Calendar, Clock,
-  ChevronUp, ChevronDown, Search, Filter, X,
-  Star, Zap, Gift, BarChart3, Activity
+import {
+  motion,
+  AnimatePresence,
+  useMotionValue,
+  useTransform
+} from "framer-motion";
+import {
+  ArrowLeft,
+  Trophy,
+  Crown,
+  Medal,
+  Flame,
+  Users,
+  Calendar,
+  ChevronUp,
+  ChevronDown,
+  Search,
+  Star,
+  Gift,
+  BarChart3,
+  Activity
 } from "lucide-react";
 
 // Animated Counter Component
@@ -84,32 +99,25 @@ export default function Leaderboard() {
   const leaderboardData = allLeaderboardData[timeFrame];
   
   // Filter by search and category
-  const filteredData = useMemo(() => {
-    let data = [...leaderboardData];
-    
-    if (searchTerm) {
-      data = data.filter(user => 
-        user.name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    
-    if (selectedCategory === "pro") {
-      data = data.filter(user => user.isPro);
-    } else if (selectedCategory === "free") {
-      data = data.filter(user => !user.isPro);
-    }
-    
-    // Sort by score (already sorted in mock data)
-    data.sort((a, b) => b.score - a.score);
-    
-    // Update user rank
-    const currentUserIndex = data.findIndex(user => user.isCurrent);
-    if (currentUserIndex !== -1) {
-      setUserRank(currentUserIndex + 1);
-    }
-    
-    return data;
-  }, [leaderboardData, searchTerm, selectedCategory]);
+ const filteredData = useMemo(() => {
+  let data = [...leaderboardData];
+
+  if (searchTerm) {
+    data = data.filter((user) =>
+      user.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }
+
+  if (selectedCategory === "pro") {
+    data = data.filter((user) => user.isPro);
+  } else if (selectedCategory === "free") {
+    data = data.filter((user) => !user.isPro);
+  }
+
+  data.sort((a, b) => b.score - a.score);
+
+  return data;
+}, [leaderboardData, searchTerm, selectedCategory]);
 
   // Get medal color based on rank
   const getMedalColor = (rank) => {
@@ -146,6 +154,17 @@ export default function Leaderboard() {
       localStorage.setItem("previousRank", userRank);
     }
   }, [userRank]);
+  useEffect(() => {
+  const currentUserIndex = filteredData.findIndex(
+    (user) => user.isCurrent
+  );
+
+  if (currentUserIndex !== -1) {
+    setUserRank(currentUserIndex + 1);
+  } else {
+    setUserRank(null);
+  }
+}, [filteredData]);
 
   return (
     <>
