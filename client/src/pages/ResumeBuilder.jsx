@@ -14,7 +14,6 @@ import {
   Lock,
   Crown,
   CreditCard,
-  Zap,
   Briefcase,
   GraduationCap,
   Code2,
@@ -119,7 +118,6 @@ export default function ResumeBuilder() {
   const [selectedTemplate, setSelectedTemplate] = useState("modern");
   const [showPreview, setShowPreview] = useState(true);
   const [atsScore, setAtsScore] = useState(null);
-  const [animateScore, setAnimateScore] = useState(false);
   const [isPro, setIsPro] = useState(false);
   const [saved, setSaved] = useState(false);
   const [showProModal, setShowProModal] = useState(false);
@@ -150,7 +148,6 @@ export default function ResumeBuilder() {
   const [newExperience, setNewExperience] = useState({ company: "", role: "", duration: "", description: "" });
   const [newEducation, setNewEducation] = useState({ institution: "", degree: "", year: "", cgpa: "" });
   const [newSkill, setNewSkill] = useState("");
-  const [editingIndex, setEditingIndex] = useState(null);
 
   // Check subscription status
   useEffect(() => {
@@ -182,14 +179,10 @@ export default function ResumeBuilder() {
   }, [resumeData]);
 
   // Update ATS score
-  useEffect(() => {
-    const score = analyzeATS(resumeData);
-    setAtsScore(score);
-    setAnimateScore(true);
-    const timer = setTimeout(() => setAnimateScore(false), 500);
-    return () => clearTimeout(timer);
-  }, [resumeData]);
-
+ useEffect(() => {
+  const score = analyzeATS(resumeData);
+  setAtsScore(score);
+}, [resumeData]);
   // Handlers
   const updatePersonalInfo = (field, value) => {
     setResumeData(prev => ({
