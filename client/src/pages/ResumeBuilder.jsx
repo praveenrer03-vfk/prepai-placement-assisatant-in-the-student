@@ -1,7 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   Download,
