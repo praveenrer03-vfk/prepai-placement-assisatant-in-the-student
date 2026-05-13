@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+
 import {
   ArrowLeft,
   Download,
@@ -9,7 +10,6 @@ import {
   Target,
   Trophy,
   FileText,
-  Layout,
   Sparkle,
   Lock,
   Crown,
@@ -19,19 +19,12 @@ import {
   GraduationCap,
   Code2,
   User,
-  Mail,
-  Phone,
-  MapPin,
-  Linkedin,
-  Globe,
   Plus,
-  Trash2,
-  Eye,
-  Save,
-  Award,
   BarChart3,
   Palette
 } from "lucide-react";
+
+import { motion, AnimatePresence } from "framer-motion";
 
 import { motion, AnimatePresence } from "framer-motion";
 
