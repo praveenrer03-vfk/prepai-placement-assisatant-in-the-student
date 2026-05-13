@@ -1,7 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   Download,
@@ -16,7 +14,16 @@ import {
   Lock,
   Crown,
   CreditCard,
-  Zap
+  Zap,
+  User,
+  Briefcase,
+  GraduationCap,
+  Code,
+  Award,
+  BookOpen,
+  Trash2,
+  Plus,
+  Eye
 } from "lucide-react";
 
 import { motion, AnimatePresence } from "framer-motion";
