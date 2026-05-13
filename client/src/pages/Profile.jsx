@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { 
   ArrowLeft, Mail, User, ShieldCheck, Award, Brain, Clock, TrendingUp, 
   Star, Zap, BarChart3, Target, CheckCircle, BookOpen, Edit2, Save, 
-  X, Camera, Upload, Trash2, AlertCircle 
+  X, Camera, Upload, Trash2, AlertCircle, Activity, Calendar
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -20,6 +20,7 @@ export default function Profile() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [activityLog, setActivityLog] = useState([]);
   
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
@@ -31,30 +32,32 @@ export default function Profile() {
       const userId = localStorage.getItem("userId");
       
       if (!token || !userId) {
-        // Fallback to localStorage if no token
         loadFromLocalStorage();
         return;
       }
 
-      const response = await fetch(`https://prepai-placement-assisatant-in-the.onrender.com/api/user/profile/${userId}`, {
+      // Fetch user profile
+      const profileResponse = await fetch(`https://prepai-placement-assisatant-in-the.onrender.com/api/user/profile/${userId}`, {
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
         }
       });
 
-      if (response.ok) {
-        const userData = await response.json();
+      if (profileResponse.ok) {
+        const userData = await profileResponse.json();
         setUser(userData);
         setEditForm({ 
           name: userData.name, 
           email: userData.email 
         });
         
-        // Load profile photo if exists
         if (userData.profilePhoto) {
           setProfilePhoto(userData.profilePhoto);
         }
+        
+        // Fetch user activity
+        await fetchUserActivity(userId, token);
         
         // Save to localStorage as backup
         localStorage.setItem("user", JSON.stringify(userData));
@@ -72,18 +75,76 @@ export default function Profile() {
     }
   };
 
+  // Fetch user activity from database
+  const fetchUserActivity = async (userId, token) => {
+    try {
+      const activityResponse = await fetch(`https://prepai-placement-assisatant-in-the.onrender.com/api/user/${userId}/activity`, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+      
+      if (activityResponse.ok) {
+        const activityData = await activityResponse.json();
+        setActivityLog(activityData);
+        localStorage.setItem("activityLog", JSON.stringify(activityData));
+      }
+    } catch (error) {
+      console.error("Error fetching activity:", error);
+      // Load from localStorage if API fails
+      const savedActivity = localStorage.getItem("activityLog");
+      if (savedActivity) {
+        setActivityLog(JSON.parse(savedActivity));
+      }
+    }
+  };
+
+  // Log user activity
+  const logActivity = async (action, details) => {
+    const token = localStorage.getItem("token");
+    const userId = localStorage.getItem("userId");
+    
+    if (!token || !userId) return;
+    
+    const activity = {
+      userId,
+      action,
+      details,
+      timestamp: new Date().toISOString()
+    };
+    
+    try {
+      await fetch(`https://prepai-placement-assisatant-in-the.onrender.com/api/user/activity`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(activity)
+      });
+      
+      // Update local activity log
+      setActivityLog(prev => [activity, ...prev].slice(0, 10));
+    } catch (error) {
+      console.error("Error logging activity:", error);
+    }
+  };
+
   const loadFromLocalStorage = () => {
     const userData = JSON.parse(localStorage.getItem("user") || "{}");
     const statsData = JSON.parse(localStorage.getItem("stats") || '{"score":8.0,"attempts":12,"level":"Advanced"}');
     const topicData = JSON.parse(localStorage.getItem("topicScores") || '[]');
     const recentData = JSON.parse(localStorage.getItem("recentTests") || '[]');
     const savedPhoto = localStorage.getItem("profilePhoto") || null;
+    const savedActivity = localStorage.getItem("activityLog") || '[]';
     
     setUser(userData.name ? userData : null);
     setStats(statsData);
     setTopicScores(topicData.length ? topicData : getDefaultTopicScores());
     setRecentTests(recentData.length ? recentData : getDefaultRecentTests());
     setProfilePhoto(savedPhoto);
+    setActivityLog(JSON.parse(savedActivity));
     setEditForm({ 
       name: userData.name || "Guest User", 
       email: userData.email || "user@example.com" 
@@ -94,7 +155,6 @@ export default function Profile() {
     fetchUserData();
   }, []);
 
-  // Default data if no test history exists
   const getDefaultTopicScores = () => [
     { name: "Time & Work", score: 85, attempts: 12, color: "#00ffa3" },
     { name: "Time & Distance", score: 72, attempts: 8, color: "#00c9ff" },
@@ -114,7 +174,6 @@ export default function Profile() {
     { date: "2026-04-06", topic: "Number System", score: 82, total: 100, difficulty: "Medium" }
   ];
 
-  // Handle profile save to database
   const handleSaveProfile = async () => {
     setSaving(true);
     setError("");
@@ -127,11 +186,11 @@ export default function Profile() {
       const updatedUser = { 
         name: editForm.name, 
         email: editForm.email,
-        profilePhoto: profilePhoto
+        profilePhoto: profilePhoto,
+        updatedAt: new Date().toISOString()
       };
       
       if (token && userId) {
-        // Save to database
         const response = await fetch(`https://prepai-placement-assisatant-in-the.onrender.com/api/user/profile/${userId}`, {
           method: "PUT",
           headers: {
@@ -145,14 +204,16 @@ export default function Profile() {
           const savedUser = await response.json();
           setUser(savedUser);
           setSuccess("Profile updated successfully!");
+          
+          // Log the activity
+          await logActivity("profile_update", `Updated profile information`);
+          
           setTimeout(() => setSuccess(""), 3000);
         } else {
           throw new Error("Failed to save to database");
         }
       }
       
-      // Always save to localStorage as backup
-      setUser(updatedUser);
       localStorage.setItem("user", JSON.stringify(updatedUser));
       if (profilePhoto) {
         localStorage.setItem("profilePhoto", profilePhoto);
@@ -168,11 +229,9 @@ export default function Profile() {
     }
   };
 
-  // Handle photo upload to database
   const handlePhotoUpload = async (event) => {
     const file = event.target.files[0];
     if (file) {
-      // Compress image before upload
       const compressedPhoto = await compressImage(file);
       
       const reader = new FileReader();
@@ -180,7 +239,6 @@ export default function Profile() {
         const photoData = reader.result;
         setProfilePhoto(photoData);
         
-        // Save to database
         const token = localStorage.getItem("token");
         const userId = localStorage.getItem("userId");
         
@@ -197,6 +255,7 @@ export default function Profile() {
             
             if (response.ok) {
               setSuccess("Photo updated successfully!");
+              await logActivity("photo_upload", "Updated profile photo");
               setTimeout(() => setSuccess(""), 3000);
             }
           } catch (error) {
@@ -211,7 +270,6 @@ export default function Profile() {
     }
   };
 
-  // Compress image before upload
   const compressImage = (file) => {
     return new Promise((resolve) => {
       const reader = new FileReader();
@@ -223,7 +281,6 @@ export default function Profile() {
           const canvas = document.createElement("canvas");
           const ctx = canvas.getContext("2d");
           
-          // Set max dimensions
           const maxWidth = 300;
           const maxHeight = 300;
           let width = img.width;
@@ -253,7 +310,6 @@ export default function Profile() {
     });
   };
 
-  // Handle photo removal from database
   const handleRemovePhoto = async () => {
     setProfilePhoto(null);
     
@@ -271,6 +327,7 @@ export default function Profile() {
         
         if (response.ok) {
           setSuccess("Photo removed successfully!");
+          await logActivity("photo_removal", "Removed profile photo");
           setTimeout(() => setSuccess(""), 3000);
         }
       } catch (error) {
@@ -285,7 +342,6 @@ export default function Profile() {
     }
   };
 
-  // Get initials for avatar
   const getInitials = () => {
     if (editForm.name && editForm.name !== "Guest User") {
       return editForm.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
@@ -307,6 +363,11 @@ export default function Profile() {
   const formatDate = (dateStr) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  const formatDateTime = (dateStr) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   };
 
   const overallProgress = (stats?.score || 8) * 10;
@@ -425,7 +486,7 @@ export default function Profile() {
           )}
         </motion.div>
 
-        {/* Profile Card with Photo */}
+        {/* Profile Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -440,7 +501,7 @@ export default function Profile() {
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            {/* Profile Photo / Avatar with Edit Option */}
+            {/* Profile Photo with Edit Option */}
             <div style={{ position: "relative" }}>
               <div
                 onClick={() => !isEditing && setShowPhotoOptions(!showPhotoOptions)}
@@ -561,7 +622,6 @@ export default function Profile() {
             
             <div style={{ flex: 1 }}>
               {isEditing ? (
-                // Edit Mode
                 <div>
                   <input
                     type="text"
@@ -642,7 +702,6 @@ export default function Profile() {
                   </div>
                 </div>
               ) : (
-                // View Mode
                 <>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
                     <h2 style={{ fontSize: 20, fontWeight: 700, color: "#fff" }}>{user?.name || "Guest User"}</h2>
@@ -667,7 +726,7 @@ export default function Profile() {
           </div>
         </motion.div>
 
-        {/* Stats Grid - Rest of the component remains the same */}
+        {/* Stats Grid */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -696,7 +755,63 @@ export default function Profile() {
           ))}
         </motion.div>
 
-        {/* Rest of the sections (Topic Performance, Recent Activity, Badges, Sign Out) remain the same */}
+        {/* Recent Activity Log */}
+        {activityLog.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.25 }}
+            style={{
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.06)",
+              borderRadius: 20,
+              padding: 20,
+              marginBottom: 20
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+              <Activity size={16} color="#00c9ff" />
+              <h3 style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>Recent Activity</h3>
+            </div>
+            
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {activityLog.slice(0, 5).map((activity, i) => (
+                <div key={i} style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  padding: "8px 0",
+                  borderBottom: i < activityLog.slice(0, 5).length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none"
+                }}>
+                  <div style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 10,
+                    background: "rgba(0,201,255,0.1)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center"
+                  }}>
+                    <Calendar size={14} color="#00c9ff" />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontSize: 13, color: "#fff", marginBottom: 2 }}>
+                      {activity.action === "profile_update" ? "Profile Updated" :
+                       activity.action === "photo_upload" ? "Photo Uploaded" :
+                       activity.action === "photo_removal" ? "Photo Removed" :
+                       activity.action === "test_completed" ? "Test Completed" : "Account Activity"}
+                    </p>
+                    {activity.details && (
+                      <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{activity.details}</p>
+                    )}
+                    <p style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>{formatDateTime(activity.timestamp)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
         {/* Topic Performance */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -753,7 +868,7 @@ export default function Profile() {
           </button>
         </motion.div>
 
-        {/* Recent Activity */}
+        {/* Recent Tests */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -843,7 +958,11 @@ export default function Profile() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.6 }}
-          onClick={() => { localStorage.clear(); navigate("/"); }}
+          onClick={async () => { 
+            await logActivity("logout", "User signed out");
+            localStorage.clear(); 
+            navigate("/"); 
+          }}
           style={{
             width: "100%",
             padding: "14px",
