@@ -12,7 +12,14 @@ import {
   Play,
   Send,
   X,
+  AlertCircle,
+  RefreshCw,
 } from 'lucide-react';
+
+// ==================================================
+// CONFIG
+// ==================================================
+const API_URL = 'https://prepai-placement-assisatant-in-the.onrender.com';
 
 // ==================================================
 // GLASS CARD STYLE — injected once safely
@@ -26,117 +33,11 @@ if (!document.getElementById('glass-card-style')) {
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { animation: spin 1s linear infinite; }
   `;
   document.head.appendChild(style);
 }
-
-// ==================================================
-// SAMPLE QUESTIONS DATA
-// ==================================================
-const sampleQuestions = [
-  {
-    id: 1,
-    title: 'Two Sum',
-    difficulty: 'Easy',
-    topic: 'Arrays',
-    description:
-      'Given an array of integers nums and an integer target, return indices of the two numbers that add up to target.',
-    inputFormat: 'First line: array of integers, Second line: target integer',
-    outputFormat: 'Indices of the two numbers (0-based)',
-    sampleInput: '[2,7,11,15]\n9',
-    sampleOutput: '[0,1]',
-    starterCode: 'function twoSum(nums, target) {\n    // Write your code here\n    \n}',
-  },
-  {
-    id: 2,
-    title: 'Reverse String',
-    difficulty: 'Easy',
-    topic: 'Strings',
-    description:
-      'Write a function that reverses a string. The input string is given as an array of characters.',
-    inputFormat: 'Array of characters',
-    outputFormat: 'Reversed array of characters',
-    sampleInput: "['h','e','l','l','o']",
-    sampleOutput: "['o','l','l','e','h']",
-    starterCode: 'function reverseString(s) {\n    // Write your code here\n    \n}',
-  },
-  {
-    id: 3,
-    title: 'Binary Search',
-    difficulty: 'Medium',
-    topic: 'Arrays',
-    description:
-      'Implement binary search to find target in sorted array. Return index if found, else -1.',
-    inputFormat: 'Sorted array and target value',
-    outputFormat: 'Index of target or -1',
-    sampleInput: '[-1,0,3,5,9,12]\n9',
-    sampleOutput: '4',
-    starterCode: 'function binarySearch(nums, target) {\n    // Write your code here\n    \n}',
-  },
-  {
-    id: 4,
-    title: 'Reverse Linked List',
-    difficulty: 'Hard',
-    topic: 'Linked List',
-    description: 'Given the head of a singly linked list, reverse the list and return its head.',
-    inputFormat: 'Linked list nodes',
-    outputFormat: 'Reversed linked list head',
-    sampleInput: '[1,2,3,4,5]',
-    sampleOutput: '[5,4,3,2,1]',
-    starterCode: 'function reverseList(head) {\n    // Write your code here\n    \n}',
-  },
-  {
-    id: 5,
-    title: 'Valid Parentheses',
-    difficulty: 'Easy',
-    topic: 'Strings',
-    description:
-      "Given a string containing just characters '(', ')', '{', '}', '[' and ']', determine if the input string is valid.",
-    inputFormat: 'String of brackets',
-    outputFormat: 'true or false',
-    sampleInput: '()[]{}',
-    sampleOutput: 'true',
-    starterCode: 'function isValid(s) {\n    // Write your code here\n    \n}',
-  },
-  {
-    id: 6,
-    title: 'Climbing Stairs',
-    difficulty: 'Medium',
-    topic: 'Dynamic Programming',
-    description:
-      'You are climbing a staircase. Each time you can climb 1 or 2 steps. Find number of distinct ways to reach top.',
-    inputFormat: 'Integer n (number of steps)',
-    outputFormat: 'Number of distinct ways',
-    sampleInput: '3',
-    sampleOutput: '3',
-    starterCode: 'function climbStairs(n) {\n    // Write your code here\n    \n}',
-  },
-  {
-    id: 7,
-    title: 'Merge Sorted Array',
-    difficulty: 'Medium',
-    topic: 'Arrays',
-    description: 'Merge two sorted arrays into one sorted array.',
-    inputFormat: 'Two sorted arrays',
-    outputFormat: 'Merged sorted array',
-    sampleInput: '[1,2,3]\n[2,5,6]',
-    sampleOutput: '[1,2,2,3,5,6]',
-    starterCode: 'function merge(nums1, nums2) {\n    // Write your code here\n    \n}',
-  },
-  {
-    id: 8,
-    title: 'Longest Substring',
-    difficulty: 'Hard',
-    topic: 'Strings',
-    description: 'Find length of longest substring without repeating characters.',
-    inputFormat: 'String s',
-    outputFormat: 'Length of longest substring',
-    sampleInput: 'abcabcbb',
-    sampleOutput: '3',
-    starterCode:
-      'function lengthOfLongestSubstring(s) {\n    // Write your code here\n    \n}',
-  },
-];
 
 // ==================================================
 // HELPERS
@@ -165,6 +66,11 @@ const CodingPractice = () => {
   const [difficultyFilter, setDifficultyFilter] = useState('All');
   const [topicFilter, setTopicFilter] = useState('All');
 
+  // ── Data state ──
+  const [questions, setQuestions] = useState([]);   // ← from DB
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   // ── UI state ──
   const [selectedQuestion, setSelectedQuestion] = useState(null);
   const [code, setCode] = useState('');
@@ -177,8 +83,41 @@ const CodingPractice = () => {
   const [lastSolvedDate, setLastSolvedDate] = useState('');
   const [totalCoins, setTotalCoins] = useState(0);
 
-  // Ref to store popup timer so it can be cleared on unmount
   const popupTimer = useRef(null);
+
+  // ========== FETCH QUESTIONS FROM DB ==========
+  const fetchQuestions = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        navigate('/');
+        return;
+      }
+
+      const res = await fetch(`${API_URL}/api/coding/questions`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.status === 401) {
+        // Token expired — redirect to login
+        localStorage.clear();
+        navigate('/');
+        return;
+      }
+
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
+
+      const data = await res.json();
+      setQuestions(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // ========== LOAD FROM LOCALSTORAGE ON MOUNT ==========
   useEffect(() => {
@@ -187,7 +126,6 @@ const CodingPractice = () => {
       try {
         setSolvedQuestions(JSON.parse(savedSolved));
       } catch {
-        // corrupted data — clear it
         localStorage.removeItem('codingSolvedQuestions');
       }
     }
@@ -202,18 +140,18 @@ const CodingPractice = () => {
     if (!isNaN(parsedStreak)) setDailyStreak(parsedStreak);
     if (savedLastDate) setLastSolvedDate(savedLastDate);
     if (!isNaN(parsedCoins)) setTotalCoins(parsedCoins);
-  }, []);
 
-  // ========== STREAK CHECK (runs after lastSolvedDate is loaded) ==========
-  // FIX: was calling checkAndUpdateStreak() inside the mount effect,
-  //      but lastSolvedDate was still '' (state not yet set).
-  //      Now this runs whenever lastSolvedDate changes, reading the correct value.
+    // Fetch questions from DB
+    fetchQuestions();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ========== STREAK CHECK ==========
   useEffect(() => {
     if (!lastSolvedDate) return;
     const today = todayString();
     const yesterday = yesterdayString();
     if (lastSolvedDate !== today && lastSolvedDate !== yesterday) {
-      setDailyStreak(0); // missed a day — reset streak
+      setDailyStreak(0);
     }
   }, [lastSolvedDate]);
 
@@ -227,11 +165,10 @@ const CodingPractice = () => {
     localStorage.setItem('codingDailyStreak', dailyStreak.toString());
     localStorage.setItem('codingLastSolvedDate', lastSolvedDate);
     localStorage.setItem('codingTotalCoins', totalCoins.toString());
-    localStorage.setItem('userCoins', totalCoins.toString()); // dashboard sync
+    localStorage.setItem('userCoins', totalCoins.toString());
   }, [dailyStreak, lastSolvedDate, totalCoins]);
 
-  // ========== CLEANUP TIMER ON UNMOUNT ==========
-  // FIX: prevents "setState on unmounted component" warning
+  // ========== CLEANUP TIMER ==========
   useEffect(() => {
     return () => {
       if (popupTimer.current) clearTimeout(popupTimer.current);
@@ -241,23 +178,20 @@ const CodingPractice = () => {
   // ========== STREAK UPDATE ON SOLVE ==========
   const updateStreakOnSolve = () => {
     const today = todayString();
-    if (lastSolvedDate === today) return; // already counted today
-
+    if (lastSolvedDate === today) return;
     if (lastSolvedDate === yesterdayString()) {
-      setDailyStreak((prev) => prev + 1); // consecutive day
+      setDailyStreak((prev) => prev + 1);
     } else {
-      setDailyStreak(1); // first ever or broke streak
+      setDailyStreak(1);
     }
     setLastSolvedDate(today);
   };
 
-  // ========== AWARD COINS ==========
-  // FIX: use functional updater to avoid stale closure on totalCoins
   const awardCoins = () => setTotalCoins((prev) => prev + 50);
 
   // ========== FILTERING ==========
-  // FIX: inline filter instead of a separate function — avoids stale closure bugs
-  const filteredQuestions = sampleQuestions.filter((q) => {
+  // Uses _id from MongoDB for solved tracking
+  const filteredQuestions = questions.filter((q) => {
     const matchesSearch = searchTerm
       ? q.title.toLowerCase().includes(searchTerm.toLowerCase())
       : true;
@@ -268,11 +202,12 @@ const CodingPractice = () => {
   });
 
   // ========== HELPERS ==========
+  // NOTE: Now uses _id (MongoDB) instead of id (hardcoded)
   const isQuestionSolved = (questionId) => solvedQuestions.includes(questionId);
 
   const handleSolveClick = (question) => {
     setSelectedQuestion(question);
-    setCode(question.starterCode);
+    setCode(question.starterCode || '// Write your code here\n');
     setShowEditor(true);
   };
 
@@ -284,12 +219,11 @@ const CodingPractice = () => {
   const handleSubmitCode = () => {
     if (!code.trim() || !selectedQuestion) return;
 
-    if (!isQuestionSolved(selectedQuestion.id)) {
-      // FIX: use functional updater for setSolvedQuestions
-      setSolvedQuestions((prev) => [...prev, selectedQuestion.id]);
+    const qId = selectedQuestion._id; // ← MongoDB _id
+    if (!isQuestionSolved(qId)) {
+      setSolvedQuestions((prev) => [...prev, qId]);
       updateStreakOnSolve();
       awardCoins();
-
       setShowSuccessPopup(true);
       popupTimer.current = setTimeout(() => setShowSuccessPopup(false), 3000);
     }
@@ -304,15 +238,16 @@ const CodingPractice = () => {
   };
 
   // ========== PROGRESS STATS ==========
+  // Uses questions from DB + _id for matching
   const getProgressStats = () => {
     const countByDifficulty = (difficulty) =>
       solvedQuestions.filter((id) => {
-        const q = sampleQuestions.find((q) => q.id === id);
+        const q = questions.find((q) => q._id === id);
         return q && q.difficulty === difficulty;
       }).length;
 
     const totalByDifficulty = (difficulty) =>
-      sampleQuestions.filter((q) => q.difficulty === difficulty).length;
+      questions.filter((q) => q.difficulty === difficulty).length;
 
     return {
       total: solvedQuestions.length,
@@ -323,6 +258,9 @@ const CodingPractice = () => {
   };
 
   const stats = getProgressStats();
+
+  // Unique topics from DB questions for filter buttons
+  const topics = ['All', ...new Set(questions.map((q) => q.topic).filter(Boolean))];
 
   // ==================================================
   // RENDER
@@ -452,38 +390,77 @@ const CodingPractice = () => {
           <div>
             <label className="text-sm text-gray-400 mb-2 block">Topics</label>
             <div className="flex gap-2 flex-wrap">
-              {['All', 'Arrays', 'Strings', 'Linked List', 'Trees', 'Graph', 'Dynamic Programming'].map(
-                (topic) => (
-                  <motion.button
-                    key={topic}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setTopicFilter(topic)}
-                    className={`px-4 py-2 rounded-lg transition-all ${
-                      topicFilter === topic
-                        ? 'bg-gradient-to-r from-[#00ffa3] to-[#00c9ff] text-black font-semibold'
-                        : 'bg-white/5 text-white hover:bg-white/10'
-                    }`}
-                  >
-                    {topic}
-                  </motion.button>
-                )
-              )}
+              {/* Topics are now dynamically generated from DB questions */}
+              {topics.map((topic) => (
+                <motion.button
+                  key={topic}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setTopicFilter(topic)}
+                  className={`px-4 py-2 rounded-lg transition-all ${
+                    topicFilter === topic
+                      ? 'bg-gradient-to-r from-[#00ffa3] to-[#00c9ff] text-black font-semibold'
+                      : 'bg-white/5 text-white hover:bg-white/10'
+                  }`}
+                >
+                  {topic}
+                </motion.button>
+              ))}
             </div>
           </div>
         </div>
 
         {/* ── Questions List ── */}
         <div className="grid gap-4">
-          <h2 className="text-xl font-semibold text-white mb-2">Problems</h2>
-          {filteredQuestions.length === 0 ? (
+          <h2 className="text-xl font-semibold text-white mb-2">
+            Problems
+            {!loading && !error && (
+              <span className="ml-2 text-sm text-gray-500 font-normal">
+                ({filteredQuestions.length} shown)
+              </span>
+            )}
+          </h2>
+
+          {/* Loading State */}
+          {loading && (
             <div className="glass-card rounded-2xl p-12 text-center">
-              <p className="text-gray-400">No questions found matching your criteria</p>
+              <RefreshCw className="w-8 h-8 text-[#00ffa3] mx-auto mb-3 spin" />
+              <p className="text-gray-400 animate-pulse">Loading questions from database...</p>
             </div>
-          ) : (
+          )}
+
+          {/* Error State */}
+          {!loading && error && (
+            <div className="glass-card rounded-2xl p-12 text-center">
+              <AlertCircle className="w-8 h-8 text-red-400 mx-auto mb-3" />
+              <p className="text-red-400 mb-4">Failed to load: {error}</p>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={fetchQuestions}
+                className="px-6 py-2 rounded-lg bg-gradient-to-r from-[#00ffa3] to-[#00c9ff] text-black font-semibold"
+              >
+                Retry
+              </motion.button>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!loading && !error && filteredQuestions.length === 0 && (
+            <div className="glass-card rounded-2xl p-12 text-center">
+              <p className="text-gray-400">
+                {questions.length === 0
+                  ? 'No questions in database yet. Visit /api/coding/seed to add questions.'
+                  : 'No questions match your filters.'}
+              </p>
+            </div>
+          )}
+
+          {/* Questions */}
+          {!loading && !error &&
             filteredQuestions.map((question) => (
               <motion.div
-                key={question.id}
+                key={question._id}           /* ← MongoDB _id */
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 whileHover={{ scale: 1.01 }}
@@ -492,7 +469,7 @@ const CodingPractice = () => {
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
                     <h3 className="text-lg font-semibold text-white">{question.title}</h3>
-                    {isQuestionSolved(question.id) && (
+                    {isQuestionSolved(question._id) && (
                       <CheckCircle className="w-5 h-5 text-green-500" />
                     )}
                   </div>
@@ -510,23 +487,22 @@ const CodingPractice = () => {
                   </div>
                 </div>
                 <motion.button
-                  whileHover={{ scale: isQuestionSolved(question.id) ? 1 : 1.05 }}
-                  whileTap={{ scale: isQuestionSolved(question.id) ? 1 : 0.95 }}
+                  whileHover={{ scale: isQuestionSolved(question._id) ? 1 : 1.05 }}
+                  whileTap={{ scale: isQuestionSolved(question._id) ? 1 : 0.95 }}
                   onClick={() =>
-                    !isQuestionSolved(question.id) && handleSolveClick(question)
+                    !isQuestionSolved(question._id) && handleSolveClick(question)
                   }
-                  disabled={isQuestionSolved(question.id)}
+                  disabled={isQuestionSolved(question._id)}
                   className={`px-6 py-2 rounded-lg font-semibold transition-all ${
-                    isQuestionSolved(question.id)
+                    isQuestionSolved(question._id)
                       ? 'bg-green-500/20 text-green-400 cursor-default'
                       : 'bg-gradient-to-r from-[#00ffa3] to-[#00c9ff] text-black hover:shadow-lg cursor-pointer'
                   }`}
                 >
-                  {isQuestionSolved(question.id) ? 'Solved' : 'Solve'}
+                  {isQuestionSolved(question._id) ? 'Solved' : 'Solve'}
                 </motion.button>
               </motion.div>
-            ))
-          )}
+            ))}
         </div>
       </div>
 
