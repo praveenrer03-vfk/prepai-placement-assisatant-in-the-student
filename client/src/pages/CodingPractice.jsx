@@ -1,20 +1,34 @@
 // src/pages/CodingPractice.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ArrowLeft, 
-  Search, 
-  Code2, 
-  CheckCircle, 
+import {
+  ArrowLeft,
+  Search,
+  CheckCircle,
   Trophy,
   Flame,
-  Calendar,
   Brain,
   Play,
   Send,
-  X
+  X,
 } from 'lucide-react';
+
+// ==================================================
+// GLASS CARD STYLE — injected once safely
+// ==================================================
+if (!document.getElementById('glass-card-style')) {
+  const style = document.createElement('style');
+  style.id = 'glass-card-style';
+  style.textContent = `
+    .glass-card {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+  `;
+  document.head.appendChild(style);
+}
 
 // ==================================================
 // SAMPLE QUESTIONS DATA
@@ -22,206 +36,238 @@ import {
 const sampleQuestions = [
   {
     id: 1,
-    title: "Two Sum",
-    difficulty: "Easy",
-    topic: "Arrays",
-    description: "Given an array of integers nums and an integer target, return indices of the two numbers that add up to target.",
-    inputFormat: "First line: array of integers, Second line: target integer",
-    outputFormat: "Indices of the two numbers (0-based)",
-    sampleInput: "[2,7,11,15]\n9",
-    sampleOutput: "[0,1]",
-    starterCode: "function twoSum(nums, target) {\n    // Write your code here\n    \n}"
+    title: 'Two Sum',
+    difficulty: 'Easy',
+    topic: 'Arrays',
+    description:
+      'Given an array of integers nums and an integer target, return indices of the two numbers that add up to target.',
+    inputFormat: 'First line: array of integers, Second line: target integer',
+    outputFormat: 'Indices of the two numbers (0-based)',
+    sampleInput: '[2,7,11,15]\n9',
+    sampleOutput: '[0,1]',
+    starterCode: 'function twoSum(nums, target) {\n    // Write your code here\n    \n}',
   },
   {
     id: 2,
-    title: "Reverse String",
-    difficulty: "Easy",
-    topic: "Strings",
-    description: "Write a function that reverses a string. The input string is given as an array of characters.",
-    inputFormat: "Array of characters",
-    outputFormat: "Reversed array of characters",
+    title: 'Reverse String',
+    difficulty: 'Easy',
+    topic: 'Strings',
+    description:
+      'Write a function that reverses a string. The input string is given as an array of characters.',
+    inputFormat: 'Array of characters',
+    outputFormat: 'Reversed array of characters',
     sampleInput: "['h','e','l','l','o']",
     sampleOutput: "['o','l','l','e','h']",
-    starterCode: "function reverseString(s) {\n    // Write your code here\n    \n}"
+    starterCode: 'function reverseString(s) {\n    // Write your code here\n    \n}',
   },
   {
     id: 3,
-    title: "Binary Search",
-    difficulty: "Medium",
-    topic: "Arrays",
-    description: "Implement binary search to find target in sorted array. Return index if found, else -1.",
-    inputFormat: "Sorted array and target value",
-    outputFormat: "Index of target or -1",
-    sampleInput: "[-1,0,3,5,9,12]\n9",
-    sampleOutput: "4",
-    starterCode: "function binarySearch(nums, target) {\n    // Write your code here\n    \n}"
+    title: 'Binary Search',
+    difficulty: 'Medium',
+    topic: 'Arrays',
+    description:
+      'Implement binary search to find target in sorted array. Return index if found, else -1.',
+    inputFormat: 'Sorted array and target value',
+    outputFormat: 'Index of target or -1',
+    sampleInput: '[-1,0,3,5,9,12]\n9',
+    sampleOutput: '4',
+    starterCode: 'function binarySearch(nums, target) {\n    // Write your code here\n    \n}',
   },
   {
     id: 4,
-    title: "Reverse Linked List",
-    difficulty: "Hard",
-    topic: "Linked List",
-    description: "Given the head of a singly linked list, reverse the list and return its head.",
-    inputFormat: "Linked list nodes",
-    outputFormat: "Reversed linked list head",
-    sampleInput: "[1,2,3,4,5]",
-    sampleOutput: "[5,4,3,2,1]",
-    starterCode: "function reverseList(head) {\n    // Write your code here\n    \n}"
+    title: 'Reverse Linked List',
+    difficulty: 'Hard',
+    topic: 'Linked List',
+    description: 'Given the head of a singly linked list, reverse the list and return its head.',
+    inputFormat: 'Linked list nodes',
+    outputFormat: 'Reversed linked list head',
+    sampleInput: '[1,2,3,4,5]',
+    sampleOutput: '[5,4,3,2,1]',
+    starterCode: 'function reverseList(head) {\n    // Write your code here\n    \n}',
   },
   {
     id: 5,
-    title: "Valid Parentheses",
-    difficulty: "Easy",
-    topic: "Strings",
-    description: "Given a string containing just characters '(', ')', '{', '}', '[' and ']', determine if the input string is valid.",
-    inputFormat: "String of brackets",
-    outputFormat: "true or false",
-    sampleInput: "()[]{}",
-    sampleOutput: "true",
-    starterCode: "function isValid(s) {\n    // Write your code here\n    \n}"
+    title: 'Valid Parentheses',
+    difficulty: 'Easy',
+    topic: 'Strings',
+    description:
+      "Given a string containing just characters '(', ')', '{', '}', '[' and ']', determine if the input string is valid.",
+    inputFormat: 'String of brackets',
+    outputFormat: 'true or false',
+    sampleInput: '()[]{}',
+    sampleOutput: 'true',
+    starterCode: 'function isValid(s) {\n    // Write your code here\n    \n}',
   },
   {
     id: 6,
-    title: "Climbing Stairs",
-    difficulty: "Medium",
-    topic: "Dynamic Programming",
-    description: "You are climbing a staircase. Each time you can climb 1 or 2 steps. Find number of distinct ways to reach top.",
-    inputFormat: "Integer n (number of steps)",
-    outputFormat: "Number of distinct ways",
-    sampleInput: "3",
-    sampleOutput: "3",
-    starterCode: "function climbStairs(n) {\n    // Write your code here\n    \n}"
+    title: 'Climbing Stairs',
+    difficulty: 'Medium',
+    topic: 'Dynamic Programming',
+    description:
+      'You are climbing a staircase. Each time you can climb 1 or 2 steps. Find number of distinct ways to reach top.',
+    inputFormat: 'Integer n (number of steps)',
+    outputFormat: 'Number of distinct ways',
+    sampleInput: '3',
+    sampleOutput: '3',
+    starterCode: 'function climbStairs(n) {\n    // Write your code here\n    \n}',
   },
   {
     id: 7,
-    title: "Merge Sorted Array",
-    difficulty: "Medium",
-    topic: "Arrays",
-    description: "Merge two sorted arrays into one sorted array.",
-    inputFormat: "Two sorted arrays",
-    outputFormat: "Merged sorted array",
-    sampleInput: "[1,2,3]\n[2,5,6]",
-    sampleOutput: "[1,2,2,3,5,6]",
-    starterCode: "function merge(nums1, nums2) {\n    // Write your code here\n    \n}"
+    title: 'Merge Sorted Array',
+    difficulty: 'Medium',
+    topic: 'Arrays',
+    description: 'Merge two sorted arrays into one sorted array.',
+    inputFormat: 'Two sorted arrays',
+    outputFormat: 'Merged sorted array',
+    sampleInput: '[1,2,3]\n[2,5,6]',
+    sampleOutput: '[1,2,2,3,5,6]',
+    starterCode: 'function merge(nums1, nums2) {\n    // Write your code here\n    \n}',
   },
   {
     id: 8,
-    title: "Longest Substring",
-    difficulty: "Hard",
-    topic: "Strings",
-    description: "Find length of longest substring without repeating characters.",
-    inputFormat: "String s",
-    outputFormat: "Length of longest substring",
-    sampleInput: "abcabcbb",
-    sampleOutput: "3",
-    starterCode: "function lengthOfLongestSubstring(s) {\n    // Write your code here\n    \n}"
-  }
+    title: 'Longest Substring',
+    difficulty: 'Hard',
+    topic: 'Strings',
+    description: 'Find length of longest substring without repeating characters.',
+    inputFormat: 'String s',
+    outputFormat: 'Length of longest substring',
+    sampleInput: 'abcabcbb',
+    sampleOutput: '3',
+    starterCode:
+      'function lengthOfLongestSubstring(s) {\n    // Write your code here\n    \n}',
+  },
 ];
 
 // ==================================================
-// MAIN COMPONENT: CodingPractice
+// HELPERS
+// ==================================================
+const difficultyClass = (difficulty) => {
+  if (difficulty === 'Easy') return 'bg-green-500/20 text-green-400';
+  if (difficulty === 'Medium') return 'bg-yellow-500/20 text-yellow-400';
+  return 'bg-red-500/20 text-red-400';
+};
+
+const todayString = () => new Date().toDateString();
+const yesterdayString = () => {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return d.toDateString();
+};
+
+// ==================================================
+// MAIN COMPONENT
 // ==================================================
 const CodingPractice = () => {
   const navigate = useNavigate();
 
-  // ========== STATE MANAGEMENT ==========
+  // ── Filter state ──
   const [searchTerm, setSearchTerm] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState('All');
   const [topicFilter, setTopicFilter] = useState('All');
-  
+
+  // ── UI state ──
   const [selectedQuestion, setSelectedQuestion] = useState(null);
   const [code, setCode] = useState('');
   const [showEditor, setShowEditor] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
-  
+
+  // ── Progress state ──
   const [solvedQuestions, setSolvedQuestions] = useState([]);
   const [dailyStreak, setDailyStreak] = useState(0);
-  const [lastSolvedDate, setLastSolvedDate] = useState(null);
+  const [lastSolvedDate, setLastSolvedDate] = useState('');
   const [totalCoins, setTotalCoins] = useState(0);
 
-  // ========== LOCALSTORAGE INITIALIZATION ==========
+  // Ref to store popup timer so it can be cleared on unmount
+  const popupTimer = useRef(null);
+
+  // ========== LOAD FROM LOCALSTORAGE ON MOUNT ==========
   useEffect(() => {
     const savedSolved = localStorage.getItem('codingSolvedQuestions');
-    if (savedSolved) setSolvedQuestions(JSON.parse(savedSolved));
-    
+    if (savedSolved) {
+      try {
+        setSolvedQuestions(JSON.parse(savedSolved));
+      } catch {
+        // corrupted data — clear it
+        localStorage.removeItem('codingSolvedQuestions');
+      }
+    }
+
     const savedStreak = localStorage.getItem('codingDailyStreak');
     const savedLastDate = localStorage.getItem('codingLastSolvedDate');
     const savedCoins = localStorage.getItem('codingTotalCoins');
-    
-    if (savedStreak) setDailyStreak(parseInt(savedStreak));
+
+    const parsedStreak = parseInt(savedStreak, 10);
+    const parsedCoins = parseInt(savedCoins, 10);
+
+    if (!isNaN(parsedStreak)) setDailyStreak(parsedStreak);
     if (savedLastDate) setLastSolvedDate(savedLastDate);
-    if (savedCoins) setTotalCoins(parseInt(savedCoins));
-    
-    checkAndUpdateStreak();
+    if (!isNaN(parsedCoins)) setTotalCoins(parsedCoins);
   }, []);
 
+  // ========== STREAK CHECK (runs after lastSolvedDate is loaded) ==========
+  // FIX: was calling checkAndUpdateStreak() inside the mount effect,
+  //      but lastSolvedDate was still '' (state not yet set).
+  //      Now this runs whenever lastSolvedDate changes, reading the correct value.
+  useEffect(() => {
+    if (!lastSolvedDate) return;
+    const today = todayString();
+    const yesterday = yesterdayString();
+    if (lastSolvedDate !== today && lastSolvedDate !== yesterday) {
+      setDailyStreak(0); // missed a day — reset streak
+    }
+  }, [lastSolvedDate]);
+
+  // ========== PERSIST SOLVED QUESTIONS ==========
   useEffect(() => {
     localStorage.setItem('codingSolvedQuestions', JSON.stringify(solvedQuestions));
   }, [solvedQuestions]);
 
+  // ========== PERSIST STREAK & COINS ==========
   useEffect(() => {
     localStorage.setItem('codingDailyStreak', dailyStreak.toString());
-    localStorage.setItem('codingLastSolvedDate', lastSolvedDate || '');
+    localStorage.setItem('codingLastSolvedDate', lastSolvedDate);
     localStorage.setItem('codingTotalCoins', totalCoins.toString());
-    localStorage.setItem('userCoins', totalCoins.toString());
+    localStorage.setItem('userCoins', totalCoins.toString()); // dashboard sync
   }, [dailyStreak, lastSolvedDate, totalCoins]);
 
-  // ========== STREAK MANAGEMENT ==========
-  const checkAndUpdateStreak = () => {
-    const today = new Date().toDateString();
-    if (lastSolvedDate !== today) {
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      if (lastSolvedDate !== yesterday.toDateString()) {
-        setDailyStreak(0);
-      }
-    }
-  };
+  // ========== CLEANUP TIMER ON UNMOUNT ==========
+  // FIX: prevents "setState on unmounted component" warning
+  useEffect(() => {
+    return () => {
+      if (popupTimer.current) clearTimeout(popupTimer.current);
+    };
+  }, []);
 
+  // ========== STREAK UPDATE ON SOLVE ==========
   const updateStreakOnSolve = () => {
-    const today = new Date().toDateString();
-    if (lastSolvedDate === today) return;
-    
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    
-    if (lastSolvedDate === yesterday.toDateString()) {
-      setDailyStreak(prev => prev + 1);
-    } else if (!lastSolvedDate) {
-      setDailyStreak(1);
+    const today = todayString();
+    if (lastSolvedDate === today) return; // already counted today
+
+    if (lastSolvedDate === yesterdayString()) {
+      setDailyStreak((prev) => prev + 1); // consecutive day
     } else {
-      setDailyStreak(1);
+      setDailyStreak(1); // first ever or broke streak
     }
-    
     setLastSolvedDate(today);
   };
 
-  // ========== REWARD SYSTEM ==========
-  const awardCoins = () => {
-    const COINS_PER_PROBLEM = 50;
-    const newTotal = totalCoins + COINS_PER_PROBLEM;
-    setTotalCoins(newTotal);
-    return newTotal;
-  };
+  // ========== AWARD COINS ==========
+  // FIX: use functional updater to avoid stale closure on totalCoins
+  const awardCoins = () => setTotalCoins((prev) => prev + 50);
 
-  // ========== FILTERING LOGIC ==========
-  const getFilteredQuestions = () => {
-    let filtered = sampleQuestions;
-    if (searchTerm) {
-      filtered = filtered.filter(q =>
-        q.title.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    if (difficultyFilter !== 'All') {
-      filtered = filtered.filter(q => q.difficulty === difficultyFilter);
-    }
-    if (topicFilter !== 'All') {
-      filtered = filtered.filter(q => q.topic === topicFilter);
-    }
-    return filtered;
-  };
+  // ========== FILTERING ==========
+  // FIX: inline filter instead of a separate function — avoids stale closure bugs
+  const filteredQuestions = sampleQuestions.filter((q) => {
+    const matchesSearch = searchTerm
+      ? q.title.toLowerCase().includes(searchTerm.toLowerCase())
+      : true;
+    const matchesDifficulty =
+      difficultyFilter === 'All' ? true : q.difficulty === difficultyFilter;
+    const matchesTopic = topicFilter === 'All' ? true : q.topic === topicFilter;
+    return matchesSearch && matchesDifficulty && matchesTopic;
+  });
 
-  // ========== QUESTION SOLVING LOGIC ==========
+  // ========== HELPERS ==========
   const isQuestionSolved = (questionId) => solvedQuestions.includes(questionId);
 
   const handleSolveClick = (question) => {
@@ -230,56 +276,61 @@ const CodingPractice = () => {
     setShowEditor(true);
   };
 
+  const handleCloseEditor = () => {
+    setShowEditor(false);
+    setSelectedQuestion(null);
+  };
+
   const handleSubmitCode = () => {
-    if (code.trim() && selectedQuestion) {
-      if (!isQuestionSolved(selectedQuestion.id)) {
-        setSolvedQuestions([...solvedQuestions, selectedQuestion.id]);
-        updateStreakOnSolve();
-        awardCoins();
-        setShowSuccessPopup(true);
-        setTimeout(() => setShowSuccessPopup(false), 3000);
-      }
-      setShowEditor(false);
-      setSelectedQuestion(null);
+    if (!code.trim() || !selectedQuestion) return;
+
+    if (!isQuestionSolved(selectedQuestion.id)) {
+      // FIX: use functional updater for setSolvedQuestions
+      setSolvedQuestions((prev) => [...prev, selectedQuestion.id]);
+      updateStreakOnSolve();
+      awardCoins();
+
+      setShowSuccessPopup(true);
+      popupTimer.current = setTimeout(() => setShowSuccessPopup(false), 3000);
     }
+
+    handleCloseEditor();
   };
 
   const handleRunCode = () => {
-    alert("Running code... (Demo: Check console for output)\nIn a production app, this would execute your code against test cases.");
+    alert(
+      'Running code... (Demo)\nIn a production app this would execute your code against test cases.'
+    );
   };
 
-  // ========== PROGRESS STATISTICS ==========
+  // ========== PROGRESS STATS ==========
   const getProgressStats = () => {
-    const easySolved = solvedQuestions.filter(id => {
-      const q = sampleQuestions.find(q => q.id === id);
-      return q && q.difficulty === 'Easy';
-    }).length;
-    const mediumSolved = solvedQuestions.filter(id => {
-      const q = sampleQuestions.find(q => q.id === id);
-      return q && q.difficulty === 'Medium';
-    }).length;
-    const hardSolved = solvedQuestions.filter(id => {
-      const q = sampleQuestions.find(q => q.id === id);
-      return q && q.difficulty === 'Hard';
-    }).length;
-    const totalEasy = sampleQuestions.filter(q => q.difficulty === 'Easy').length;
-    const totalMedium = sampleQuestions.filter(q => q.difficulty === 'Medium').length;
-    const totalHard = sampleQuestions.filter(q => q.difficulty === 'Hard').length;
+    const countByDifficulty = (difficulty) =>
+      solvedQuestions.filter((id) => {
+        const q = sampleQuestions.find((q) => q.id === id);
+        return q && q.difficulty === difficulty;
+      }).length;
+
+    const totalByDifficulty = (difficulty) =>
+      sampleQuestions.filter((q) => q.difficulty === difficulty).length;
+
     return {
       total: solvedQuestions.length,
-      easy: { solved: easySolved, total: totalEasy },
-      medium: { solved: mediumSolved, total: totalMedium },
-      hard: { solved: hardSolved, total: totalHard }
+      easy: { solved: countByDifficulty('Easy'), total: totalByDifficulty('Easy') },
+      medium: { solved: countByDifficulty('Medium'), total: totalByDifficulty('Medium') },
+      hard: { solved: countByDifficulty('Hard'), total: totalByDifficulty('Hard') },
     };
   };
 
   const stats = getProgressStats();
-  const filteredQuestions = getFilteredQuestions();
 
-  // ========== RENDER ==========
+  // ==================================================
+  // RENDER
+  // ==================================================
   return (
     <div className="min-h-screen bg-[#060610]">
-      {/* Success Popup */}
+
+      {/* ── Success Popup ── */}
       <AnimatePresence>
         {showSuccessPopup && (
           <motion.div
@@ -290,7 +341,7 @@ const CodingPractice = () => {
           >
             <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-3">
               <CheckCircle className="w-6 h-6" />
-              <span className="font-semibold">Problem Solved Successfully 🎉 +50 Coins!</span>
+              <span className="font-semibold">Problem Solved! 🎉 +50 Coins!</span>
             </div>
           </motion.div>
         )}
@@ -318,11 +369,17 @@ const CodingPractice = () => {
           </div>
 
           <div className="flex gap-4">
-            <motion.div whileHover={{ scale: 1.05 }} className="glass-card px-4 py-2 rounded-xl flex items-center gap-2">
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              className="glass-card px-4 py-2 rounded-xl flex items-center gap-2"
+            >
               <Flame className="w-5 h-5 text-orange-500" />
               <span className="text-white font-bold">{dailyStreak} day streak</span>
             </motion.div>
-            <motion.div whileHover={{ scale: 1.05 }} className="glass-card px-4 py-2 rounded-xl flex items-center gap-2">
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              className="glass-card px-4 py-2 rounded-xl flex items-center gap-2"
+            >
               <Trophy className="w-5 h-5 text-yellow-500" />
               <span className="text-white font-bold">{totalCoins} coins</span>
             </motion.div>
@@ -357,7 +414,6 @@ const CodingPractice = () => {
 
         {/* ── Search & Filters ── */}
         <div className="glass-card rounded-2xl p-6 mb-8">
-          {/* FIX: Added id, name, and autoComplete to search input */}
           <div className="relative mb-6">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
@@ -373,9 +429,9 @@ const CodingPractice = () => {
           </div>
 
           <div className="mb-4">
-            <label htmlFor="difficulty-filter" className="text-sm text-gray-400 mb-2 block">Difficulty</label>
+            <label className="text-sm text-gray-400 mb-2 block">Difficulty</label>
             <div className="flex gap-2 flex-wrap">
-              {['All', 'Easy', 'Medium', 'Hard'].map(diff => (
+              {['All', 'Easy', 'Medium', 'Hard'].map((diff) => (
                 <motion.button
                   key={diff}
                   whileHover={{ scale: 1.05 }}
@@ -394,23 +450,25 @@ const CodingPractice = () => {
           </div>
 
           <div>
-            <label htmlFor="topic-filter" className="text-sm text-gray-400 mb-2 block">Topics</label>
+            <label className="text-sm text-gray-400 mb-2 block">Topics</label>
             <div className="flex gap-2 flex-wrap">
-              {['All', 'Arrays', 'Strings', 'Linked List', 'Trees', 'Graph', 'Dynamic Programming'].map(topic => (
-                <motion.button
-                  key={topic}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setTopicFilter(topic)}
-                  className={`px-4 py-2 rounded-lg transition-all ${
-                    topicFilter === topic
-                      ? 'bg-gradient-to-r from-[#00ffa3] to-[#00c9ff] text-black font-semibold'
-                      : 'bg-white/5 text-white hover:bg-white/10'
-                  }`}
-                >
-                  {topic}
-                </motion.button>
-              ))}
+              {['All', 'Arrays', 'Strings', 'Linked List', 'Trees', 'Graph', 'Dynamic Programming'].map(
+                (topic) => (
+                  <motion.button
+                    key={topic}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setTopicFilter(topic)}
+                    className={`px-4 py-2 rounded-lg transition-all ${
+                      topicFilter === topic
+                        ? 'bg-gradient-to-r from-[#00ffa3] to-[#00c9ff] text-black font-semibold'
+                        : 'bg-white/5 text-white hover:bg-white/10'
+                    }`}
+                  >
+                    {topic}
+                  </motion.button>
+                )
+              )}
             </div>
           </div>
         </div>
@@ -423,7 +481,7 @@ const CodingPractice = () => {
               <p className="text-gray-400">No questions found matching your criteria</p>
             </div>
           ) : (
-            filteredQuestions.map(question => (
+            filteredQuestions.map((question) => (
               <motion.div
                 key={question.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -439,11 +497,11 @@ const CodingPractice = () => {
                     )}
                   </div>
                   <div className="flex gap-2">
-                    <span className={`px-2 py-1 rounded-lg text-xs font-medium ${
-                      question.difficulty === 'Easy' ? 'bg-green-500/20 text-green-400' :
-                      question.difficulty === 'Medium' ? 'bg-yellow-500/20 text-yellow-400' :
-                      'bg-red-500/20 text-red-400'
-                    }`}>
+                    <span
+                      className={`px-2 py-1 rounded-lg text-xs font-medium ${difficultyClass(
+                        question.difficulty
+                      )}`}
+                    >
                       {question.difficulty}
                     </span>
                     <span className="px-2 py-1 rounded-lg text-xs font-medium bg-blue-500/20 text-blue-400">
@@ -452,15 +510,17 @@ const CodingPractice = () => {
                   </div>
                 </div>
                 <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => handleSolveClick(question)}
+                  whileHover={{ scale: isQuestionSolved(question.id) ? 1 : 1.05 }}
+                  whileTap={{ scale: isQuestionSolved(question.id) ? 1 : 0.95 }}
+                  onClick={() =>
+                    !isQuestionSolved(question.id) && handleSolveClick(question)
+                  }
+                  disabled={isQuestionSolved(question.id)}
                   className={`px-6 py-2 rounded-lg font-semibold transition-all ${
                     isQuestionSolved(question.id)
                       ? 'bg-green-500/20 text-green-400 cursor-default'
-                      : 'bg-gradient-to-r from-[#00ffa3] to-[#00c9ff] text-black hover:shadow-lg'
+                      : 'bg-gradient-to-r from-[#00ffa3] to-[#00c9ff] text-black hover:shadow-lg cursor-pointer'
                   }`}
-                  disabled={isQuestionSolved(question.id)}
                 >
                   {isQuestionSolved(question.id) ? 'Solved' : 'Solve'}
                 </motion.button>
@@ -478,7 +538,7 @@ const CodingPractice = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setShowEditor(false)}
+            onClick={handleCloseEditor}
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
@@ -487,16 +547,16 @@ const CodingPractice = () => {
               className="bg-[#0a0a1a] rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Editor Header */}
+              {/* Header */}
               <div className="sticky top-0 bg-[#0a0a1a] border-b border-white/10 p-4 flex justify-between items-center">
                 <div>
                   <h3 className="text-xl font-bold text-white">{selectedQuestion.title}</h3>
                   <div className="flex gap-2 mt-1">
-                    <span className={`px-2 py-1 rounded-lg text-xs font-medium ${
-                      selectedQuestion.difficulty === 'Easy' ? 'bg-green-500/20 text-green-400' :
-                      selectedQuestion.difficulty === 'Medium' ? 'bg-yellow-500/20 text-yellow-400' :
-                      'bg-red-500/20 text-red-400'
-                    }`}>
+                    <span
+                      className={`px-2 py-1 rounded-lg text-xs font-medium ${difficultyClass(
+                        selectedQuestion.difficulty
+                      )}`}
+                    >
                       {selectedQuestion.difficulty}
                     </span>
                     <span className="px-2 py-1 rounded-lg text-xs font-medium bg-blue-500/20 text-blue-400">
@@ -505,14 +565,14 @@ const CodingPractice = () => {
                   </div>
                 </div>
                 <button
-                  onClick={() => setShowEditor(false)}
+                  onClick={handleCloseEditor}
                   className="p-2 rounded-lg hover:bg-white/10 transition-colors"
                 >
                   <X className="w-6 h-6 text-gray-400" />
                 </button>
               </div>
 
-              {/* Problem Statement */}
+              {/* Content */}
               <div className="p-6 space-y-6">
                 <div>
                   <h4 className="text-lg font-semibold text-white mb-2">Problem Statement</h4>
@@ -543,18 +603,20 @@ const CodingPractice = () => {
 
                 {/* Code Editor */}
                 <div>
-                  <label htmlFor="code-editor" className="text-lg font-semibold text-white mb-2 block">
+                  <label
+                    htmlFor="code-editor"
+                    className="text-lg font-semibold text-white mb-2 block"
+                  >
                     Your Code
                   </label>
-                  {/* FIX: Added id, name, and autoComplete to the code textarea */}
                   <textarea
                     id="code-editor"
                     name="code-editor"
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
                     autoComplete="off"
-                    className="w-full h-64 bg-[#1a1a2e] border border-white/10 rounded-xl p-4 text-white font-mono text-sm focus:outline-none focus:border-[#00ffa3]"
                     spellCheck={false}
+                    className="w-full h-64 bg-[#1a1a2e] border border-white/10 rounded-xl p-4 text-white font-mono text-sm focus:outline-none focus:border-[#00ffa3] resize-none"
                   />
                 </div>
 
@@ -587,16 +649,5 @@ const CodingPractice = () => {
     </div>
   );
 };
-
-// Global glass-card style
-const style = document.createElement('style');
-style.textContent = `
-  .glass-card {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-`;
-document.head.appendChild(style);
 
 export default CodingPractice;
