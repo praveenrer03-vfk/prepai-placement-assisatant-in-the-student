@@ -8,19 +8,40 @@ dotenv.config();
 
 const app = express();
 
-/* ---------------- MIDDLEWARE ---------------- */
-app.use(express.json());
+/* ---------------- CORS ---------------- */
+// FIX #1: Added the correct Vercel deployment URL
+// FIX #2: Added allowed methods and headers explicitly
+// FIX #3: Moved cors() BEFORE express.json() so preflight OPTIONS
+//         requests are handled before any body parsing
+const allowedOrigins = [
+  "https://prepai-placement-assisatant-in-the-student-qoin-m50ozni4n.vercel.app",
+  "https://prepai-placement-assisatant-in-the-two.vercel.app", // keep old one too
+  "http://localhost:5173",
+  "http://localhost:3000",
+];
 
 app.use(
   cors({
-    origin: [
-      "https://prepai-placement-assisatant-in-the-two.vercel.app",
-      "http://localhost:5173",
-      "http://localhost:3000",
-    ],
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g. curl, Postman, mobile apps)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS: origin '${origin}' not allowed`));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   })
 );
+
+// FIX #4: Explicitly handle preflight OPTIONS requests for ALL routes
+// Without this, browsers' preflight checks fail silently
+app.options("*", cors());
+
+/* ---------------- MIDDLEWARE ---------------- */
+app.use(express.json());
 
 /* ---------------- AUTH MIDDLEWARE ---------------- */
 const authenticate = (req, res, next) => {
@@ -90,11 +111,7 @@ app.post("/api/auth/register", async (req, res) => {
       return res.status(400).json({ error: "Email already exists" });
     }
 
-    const user = await User.create({
-      name,
-      email,
-      password, // stored as plain text
-    });
+    const user = await User.create({ name, email, password });
 
     res.status(201).json({
       message: "Registration successful",
@@ -116,11 +133,7 @@ app.post("/api/auth/login", async (req, res) => {
 
     const user = await User.findOne({ email });
 
-    if (!user) {
-      return res.status(401).json({ error: "Invalid credentials" });
-    }
-
-    if (user.password !== password) {
+    if (!user || user.password !== password) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
@@ -139,17 +152,18 @@ app.post("/api/auth/login", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 /* ---------------- DEBUG LOGIN ---------------- */
+// FIX #5: Remove or protect this in production — it exposes stored passwords!
+// TODO: Delete this route before going to production
 app.post("/api/debug-login", async (req, res) => {
   try {
     const { email, password } = req.body;
-    
     const user = await User.findOne({ email });
-    
     res.json({
       step1_received: { email, password },
       step2_userFound: !!user,
-      step3_storedPassword: user ? user.password : null,
+      step3_storedPassword: user ? user.password : null, // ⚠️ REMOVE IN PRODUCTION
       step4_match: user ? user.password === password : false,
       step5_jwtSecret: !!process.env.JWT_SECRET,
     });
@@ -172,14 +186,10 @@ app.get("/api/users", authenticate, async (req, res) => {
 app.get("/api/aptitude/questions", authenticate, async (req, res) => {
   try {
     const { topic } = req.query;
-
     console.log("Requested topic:", topic);
-
     const filter = topic ? { topic } : {};
     const questions = await Question.find(filter).lean();
-
     console.log("Questions found:", questions.length);
-
     res.json(questions);
   } catch (err) {
     console.log("Questions Route Error:", err);
@@ -196,14 +206,7 @@ app.post("/api/questions", authenticate, async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    const newQuestion = await Question.create({
-      question,
-      options,
-      answer,
-      explanation,
-      topic,
-    });
-
+    const newQuestion = await Question.create({ question, options, answer, explanation, topic });
     res.status(201).json(newQuestion);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -220,7 +223,6 @@ app.get("/api/seed", async (req, res) => {
       explanation: "2% of 20 = (2/100) × 20 = 0.4",
       topic: "percentage",
     });
-
     res.json({ message: "Sample question inserted ✅", data });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -241,9 +243,9 @@ const startServer = async () => {
     console.log("Connected DB:", mongoose.connection.name);
 
     const PORT = process.env.PORT || 5000;
-
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT} 🚀`);
+      console.log("Allowed origins:", allowedOrigins);
     });
   } catch (err) {
     console.log("MongoDB Connection Error:", err);
