@@ -14,12 +14,35 @@ import {
   X,
   AlertCircle,
   RefreshCw,
+  ChevronDown,
+  Code2,
 } from 'lucide-react';
 
 // ==================================================
 // CONFIG
 // ==================================================
 const API_URL = 'https://prepai-placement-assisatant-in-the.onrender.com';
+
+// Programming languages configuration
+const LANGUAGES = [
+  { id: 'javascript', name: 'JavaScript', icon: '🟨', defaultCode: '// Write your JavaScript code here\n' },
+  { id: 'python', name: 'Python', icon: '🐍', defaultCode: '# Write your Python code here\n' },
+  { id: 'java', name: 'Java', icon: '☕', defaultCode: '// Write your Java code here\npublic class Solution {\n    \n}' },
+  { id: 'cpp', name: 'C++', icon: '⚡', defaultCode: '// Write your C++ code here\n' },
+  { id: 'c', name: 'C', icon: '🔧', defaultCode: '// Write your C code here\n' },
+];
+
+// Starter code templates for each language (if question doesn't have specific starter code)
+const getStarterCodeTemplate = (language, question) => {
+  const templates = {
+    javascript: `function ${question?.functionName || 'solution'}(${question?.params || 'input'}) {\n    // Write your code here\n    \n}`,
+    python: `def ${question?.functionName || 'solution'}(${question?.params || 'input'}):\n    # Write your code here\n    pass\n`,
+    java: `public class Solution {\n    public static ${question?.returnType || 'int'} ${question?.functionName || 'solution'}(${question?.params || 'int[] arr'}) {\n        // Write your code here\n        \n    }\n}`,
+    cpp: `#include <iostream>\nusing namespace std;\n\n${question?.returnType || 'int'} ${question?.functionName || 'solution'}(${question?.params || 'vector<int>& nums'}) {\n    // Write your code here\n    \n}`,
+    c: `#include <stdio.h>\n\n${question?.returnType || 'int'} ${question?.functionName || 'solution'}(${question?.params || 'int* arr, int n'}) {\n    // Write your code here\n    \n}`,
+  };
+  return templates[language] || templates.javascript;
+};
 
 // ==================================================
 // GLASS CARD STYLE & FONTS — injected once safely
@@ -150,9 +173,46 @@ if (!document.getElementById('glass-card-style')) {
       transform: rotate(180deg) scale(0.95);
     }
     
+    /* Language selector dropdown animation */
+    .language-dropdown {
+      animation: slideDown 0.2s ease-out;
+    }
+    
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
     /* Input focus glow */
     input:focus, textarea:focus {
       animation: glow-pulse 1.5s infinite;
+    }
+    
+    /* Code editor line number effect */
+    .code-editor-container {
+      position: relative;
+    }
+    
+    /* Tab styling */
+    .tab-active {
+      position: relative;
+    }
+    
+    .tab-active::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #00ffa3, #00c9ff);
+      border-radius: 2px;
     }
   `;
   document.head.appendChild(style);
@@ -195,6 +255,11 @@ const CodingPractice = () => {
   const [code, setCode] = useState('');
   const [showEditor, setShowEditor] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState(LANGUAGES[0]);
+  const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
+  const [activeTab, setActiveTab] = useState('problem'); // 'problem' or 'solution'
+  const [output, setOutput] = useState('');
+  const [isRunning, setIsRunning] = useState(false);
 
   // ── Progress state ──
   const [solvedQuestions, setSolvedQuestions] = useState([]);
@@ -203,6 +268,7 @@ const CodingPractice = () => {
   const [totalCoins, setTotalCoins] = useState(0);
 
   const popupTimer = useRef(null);
+  const dropdownRef = useRef(null);
 
   // ========== FETCH QUESTIONS FROM DB ==========
   const fetchQuestions = async () => {
@@ -292,6 +358,17 @@ const CodingPractice = () => {
     };
   }, []);
 
+  // ========== Handle click outside dropdown ==========
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowLanguageDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   // ========== STREAK UPDATE ON SOLVE ==========
   const updateStreakOnSolve = () => {
     const today = todayString();
@@ -322,13 +399,29 @@ const CodingPractice = () => {
 
   const handleSolveClick = (question) => {
     setSelectedQuestion(question);
-    setCode(question.starterCode || '// Write your code here\n');
+    // Load saved code for this question and language if exists
+    const savedCodeKey = `code_${question._id}_${selectedLanguage.id}`;
+    const savedCode = localStorage.getItem(savedCodeKey);
+    if (savedCode) {
+      setCode(savedCode);
+    } else {
+      setCode(question.starterCode || getStarterCodeTemplate(selectedLanguage.id, question));
+    }
+    setOutput('');
+    setActiveTab('problem');
     setShowEditor(true);
   };
 
   const handleCloseEditor = () => {
+    // Save current code before closing
+    if (selectedQuestion && code) {
+      const savedCodeKey = `code_${selectedQuestion._id}_${selectedLanguage.id}`;
+      localStorage.setItem(savedCodeKey, code);
+    }
     setShowEditor(false);
     setSelectedQuestion(null);
+    setOutput('');
+    setActiveTab('problem');
   };
 
   const handleSubmitCode = () => {
@@ -346,10 +439,39 @@ const CodingPractice = () => {
     handleCloseEditor();
   };
 
-  const handleRunCode = () => {
-    alert(
-      'Running code... (Demo)\nIn a production app this would execute your code against test cases.'
-    );
+  const handleRunCode = async () => {
+    if (!code.trim() || !selectedQuestion) return;
+    
+    setIsRunning(true);
+    setOutput('Running code...');
+    
+    // Simulate code execution (in real app, send to backend)
+    setTimeout(() => {
+      setOutput(`✓ Code executed successfully!\n\nLanguage: ${selectedLanguage.name}\nQuestion: ${selectedQuestion.title}\n\nOutput:\nSample output would appear here.\n\nNote: This is a demo. In production, your code would be executed against test cases.`);
+      setIsRunning(false);
+    }, 1500);
+  };
+
+  const handleLanguageChange = (language) => {
+    // Save current code for previous language
+    if (selectedQuestion && code) {
+      const prevLangKey = `code_${selectedQuestion._id}_${selectedLanguage.id}`;
+      localStorage.setItem(prevLangKey, code);
+    }
+    
+    setSelectedLanguage(language);
+    setShowLanguageDropdown(false);
+    
+    // Load saved code for new language
+    if (selectedQuestion) {
+      const savedCodeKey = `code_${selectedQuestion._id}_${language.id}`;
+      const savedCode = localStorage.getItem(savedCodeKey);
+      if (savedCode) {
+        setCode(savedCode);
+      } else {
+        setCode(selectedQuestion.starterCode || getStarterCodeTemplate(language.id, selectedQuestion));
+      }
+    }
   };
 
   // ========== PROGRESS STATS ==========
@@ -673,7 +795,7 @@ const CodingPractice = () => {
         </div>
       </div>
 
-      {/* ── Code Editor Modal with UNIQUE EXIT BUTTON ── */}
+      {/* ── Code Editor Modal with Language Selector ── */}
       <AnimatePresence>
         {showEditor && selectedQuestion && (
           <motion.div
@@ -688,142 +810,235 @@ const CodingPractice = () => {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="bg-gradient-to-br from-[#0a0a1a] to-[#0f0f1f] rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto border border-white/10 shadow-2xl"
+              className="bg-gradient-to-br from-[#0a0a1a] to-[#0f0f1f] rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto border border-white/10 shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Header with UNIQUE EXIT BUTTON */}
-              <div className="sticky top-0 bg-gradient-to-r from-[#0a0a1a] to-[#0f0f1f] backdrop-blur-sm border-b border-white/10 p-5 flex justify-between items-center">
-                <div>
-                  <motion.h3 
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent"
-                  >
-                    {selectedQuestion.title}
-                  </motion.h3>
-                  <div className="flex gap-2 mt-2">
-                    <span
-                      className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${difficultyClass(
-                        selectedQuestion.difficulty
-                      )}`}
+              {/* Header with Language Selector */}
+              <div className="sticky top-0 bg-gradient-to-r from-[#0a0a1a] to-[#0f0f1f] backdrop-blur-sm border-b border-white/10 p-5">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <motion.h3 
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent"
                     >
-                      {selectedQuestion.difficulty}
-                    </span>
-                    <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-gradient-to-r from-blue-500/20 to-blue-600/20 text-blue-400 border border-blue-500/30">
-                      {selectedQuestion.topic}
-                    </span>
+                      {selectedQuestion.title}
+                    </motion.h3>
+                    <div className="flex gap-2 mt-2">
+                      <span
+                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${difficultyClass(
+                          selectedQuestion.difficulty
+                        )}`}
+                      >
+                        {selectedQuestion.difficulty}
+                      </span>
+                      <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-gradient-to-r from-blue-500/20 to-blue-600/20 text-blue-400 border border-blue-500/30">
+                        {selectedQuestion.topic}
+                      </span>
+                    </div>
+                  </div>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={handleCloseEditor}
+                    className="exit-button-unique"
+                  >
+                    <X className="w-5 h-5 text-red-400" />
+                  </motion.button>
+                </div>
+
+                {/* Language Selector and Tabs */}
+                <div className="flex items-center justify-between">
+                  {/* Language Dropdown */}
+                  <div className="relative" ref={dropdownRef}>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setShowLanguageDropdown(!showLanguageDropdown)}
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 transition-all duration-300 border border-white/20"
+                    >
+                      <Code2 className="w-4 h-4 text-[#00ffa3]" />
+                      <span className="text-white font-medium">{selectedLanguage.icon} {selectedLanguage.name}</span>
+                      <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${showLanguageDropdown ? 'rotate-180' : ''}`} />
+                    </motion.button>
+
+                    <AnimatePresence>
+                      {showLanguageDropdown && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="absolute top-full left-0 mt-2 w-48 bg-[#1a1a2e] rounded-xl border border-white/10 shadow-xl overflow-hidden z-20 language-dropdown"
+                        >
+                          {LANGUAGES.map((lang) => (
+                            <button
+                              key={lang.id}
+                              onClick={() => handleLanguageChange(lang)}
+                              className={`w-full px-4 py-2.5 text-left flex items-center gap-2 transition-all duration-200 ${
+                                selectedLanguage.id === lang.id
+                                  ? 'bg-gradient-to-r from-[#00ffa3]/20 to-[#00c9ff]/20 text-white'
+                                  : 'text-gray-300 hover:bg-white/10'
+                              }`}
+                            >
+                              <span>{lang.icon}</span>
+                              <span>{lang.name}</span>
+                              {selectedLanguage.id === lang.id && (
+                                <CheckCircle className="w-4 h-4 text-[#00ffa3] ml-auto" />
+                              )}
+                            </button>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  {/* Tabs */}
+                  <div className="flex gap-1 bg-white/5 rounded-xl p-1">
+                    <button
+                      onClick={() => setActiveTab('problem')}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                        activeTab === 'problem'
+                          ? 'tab-active bg-gradient-to-r from-[#00ffa3]/20 to-[#00c9ff]/20 text-white'
+                          : 'text-gray-400 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      📖 Problem
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('solution')}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                        activeTab === 'solution'
+                          ? 'tab-active bg-gradient-to-r from-[#00ffa3]/20 to-[#00c9ff]/20 text-white'
+                          : 'text-gray-400 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      💻 Solution
+                    </button>
                   </div>
                 </div>
-                {/* UNIQUE EXIT BUTTON - Neon Pulse with Rotate and Glow */}
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={handleCloseEditor}
-                  className="exit-button-unique"
-                >
-                  <X className="w-5 h-5 text-red-400" />
-                </motion.button>
               </div>
 
               {/* Content */}
-              <div className="p-6 space-y-6">
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.1 }}
-                >
-                  <h4 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-                    <span className="text-[#00ffa3]">📖</span> Problem Statement
-                  </h4>
-                  <p className="text-gray-300 leading-relaxed">{selectedQuestion.description}</p>
-                </motion.div>
+              <div className="p-6">
+                <AnimatePresence mode="wait">
+                  {/* Problem Tab */}
+                  {activeTab === 'problem' && (
+                    <motion.div
+                      key="problem"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      transition={{ duration: 0.2 }}
+                      className="space-y-6"
+                    >
+                      <div>
+                        <h4 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                          <span className="text-[#00ffa3]">📖</span> Problem Statement
+                        </h4>
+                        <p className="text-gray-300 leading-relaxed">{selectedQuestion.description}</p>
+                      </div>
 
-                <motion.div 
-                  className="grid md:grid-cols-2 gap-4"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.15 }}
-                >
-                  <div className="bg-gradient-to-br from-white/5 to-white/3 rounded-xl p-4 border border-white/10">
-                    <h5 className="text-sm font-semibold text-[#00ffa3] mb-2">📥 Input Format</h5>
-                    <p className="text-gray-300 text-sm">{selectedQuestion.inputFormat}</p>
-                  </div>
-                  <div className="bg-gradient-to-br from-white/5 to-white/3 rounded-xl p-4 border border-white/10">
-                    <h5 className="text-sm font-semibold text-[#00ffa3] mb-2">📤 Output Format</h5>
-                    <p className="text-gray-300 text-sm">{selectedQuestion.outputFormat}</p>
-                  </div>
-                </motion.div>
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div className="bg-gradient-to-br from-white/5 to-white/3 rounded-xl p-4 border border-white/10">
+                          <h5 className="text-sm font-semibold text-[#00ffa3] mb-2">📥 Input Format</h5>
+                          <p className="text-gray-300 text-sm">{selectedQuestion.inputFormat}</p>
+                        </div>
+                        <div className="bg-gradient-to-br from-white/5 to-white/3 rounded-xl p-4 border border-white/10">
+                          <h5 className="text-sm font-semibold text-[#00ffa3] mb-2">📤 Output Format</h5>
+                          <p className="text-gray-300 text-sm">{selectedQuestion.outputFormat}</p>
+                        </div>
+                      </div>
 
-                <motion.div 
-                  className="grid md:grid-cols-2 gap-4"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  <div className="bg-gradient-to-br from-yellow-500/10 to-yellow-500/5 rounded-xl p-4 border border-yellow-500/20">
-                    <h5 className="text-sm font-semibold text-yellow-400 mb-2">📋 Sample Input</h5>
-                    <pre className="text-gray-300 text-sm font-mono bg-black/30 p-2 rounded-lg overflow-x-auto">
-                      {selectedQuestion.sampleInput}
-                    </pre>
-                  </div>
-                  <div className="bg-gradient-to-br from-yellow-500/10 to-yellow-500/5 rounded-xl p-4 border border-yellow-500/20">
-                    <h5 className="text-sm font-semibold text-yellow-400 mb-2">✨ Sample Output</h5>
-                    <pre className="text-gray-300 text-sm font-mono bg-black/30 p-2 rounded-lg overflow-x-auto">
-                      {selectedQuestion.sampleOutput}
-                    </pre>
-                  </div>
-                </motion.div>
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div className="bg-gradient-to-br from-yellow-500/10 to-yellow-500/5 rounded-xl p-4 border border-yellow-500/20">
+                          <h5 className="text-sm font-semibold text-yellow-400 mb-2">📋 Sample Input</h5>
+                          <pre className="text-gray-300 text-sm font-mono bg-black/30 p-2 rounded-lg overflow-x-auto">
+                            {selectedQuestion.sampleInput}
+                          </pre>
+                        </div>
+                        <div className="bg-gradient-to-br from-yellow-500/10 to-yellow-500/5 rounded-xl p-4 border border-yellow-500/20">
+                          <h5 className="text-sm font-semibold text-yellow-400 mb-2">✨ Sample Output</h5>
+                          <pre className="text-gray-300 text-sm font-mono bg-black/30 p-2 rounded-lg overflow-x-auto">
+                            {selectedQuestion.sampleOutput}
+                          </pre>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
 
-                {/* Code Editor */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.25 }}
-                >
-                  <label
-                    htmlFor="code-editor"
-                    className="text-lg font-semibold text-white mb-3 block flex items-center gap-2"
-                  >
-                    <span className="text-[#00ffa3]">💻</span> Your Solution
-                  </label>
-                  <textarea
-                    id="code-editor"
-                    name="code-editor"
-                    value={code}
-                    onChange={(e) => setCode(e.target.value)}
-                    autoComplete="off"
-                    spellCheck={false}
-                    className="w-full h-72 bg-[#0d0d1a] border border-white/10 rounded-xl p-4 text-gray-200 font-mono text-sm focus:outline-none focus:border-[#00ffa3] focus:ring-1 focus:ring-[#00ffa3] resize-none transition-all"
-                    placeholder="Write your code here..."
-                  />
-                </motion.div>
+                  {/* Solution Tab */}
+                  {activeTab === 'solution' && (
+                    <motion.div
+                      key="solution"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.2 }}
+                      className="space-y-4"
+                    >
+                      <div>
+                        <label className="text-lg font-semibold text-white mb-3 block flex items-center gap-2">
+                          <span className="text-[#00ffa3]">💻</span> Your Code ({selectedLanguage.name})
+                        </label>
+                        <textarea
+                          value={code}
+                          onChange={(e) => setCode(e.target.value)}
+                          autoComplete="off"
+                          spellCheck={false}
+                          className="w-full h-80 bg-[#0d0d1a] border border-white/10 rounded-xl p-4 text-gray-200 font-mono text-sm focus:outline-none focus:border-[#00ffa3] focus:ring-1 focus:ring-[#00ffa3] resize-none transition-all"
+                          placeholder="Write your code here..."
+                        />
+                      </div>
 
-                {/* Action Buttons */}
-                <motion.div 
-                  className="flex gap-4"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.3 }}
-                >
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={handleRunCode}
-                    className="flex-1 py-3 rounded-xl bg-white/10 text-white font-semibold flex items-center justify-center gap-2 hover:bg-white/20 transition-all duration-300 border border-white/20"
-                  >
-                    <Play className="w-5 h-5" />
-                    Run Code
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={handleSubmitCode}
-                    className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#00ffa3] to-[#00c9ff] text-black font-semibold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300"
-                  >
-                    <Send className="w-5 h-5" />
-                    Submit Solution
-                  </motion.button>
-                </motion.div>
+                      {/* Output Section */}
+                      {output && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="bg-gradient-to-br from-black/40 to-black/20 rounded-xl p-4 border border-white/10"
+                        >
+                          <h5 className="text-sm font-semibold text-[#00ffa3] mb-2 flex items-center gap-2">
+                            <span>📤</span> Output
+                          </h5>
+                          <pre className="text-gray-300 text-sm font-mono whitespace-pre-wrap">
+                            {output}
+                          </pre>
+                        </motion.div>
+                      )}
+
+                      {/* Action Buttons */}
+                      <div className="flex gap-4">
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={handleRunCode}
+                          disabled={isRunning}
+                          className={`flex-1 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-300 border ${
+                            isRunning
+                              ? 'bg-white/5 text-gray-500 border-white/10 cursor-not-allowed'
+                              : 'bg-white/10 text-white hover:bg-white/20 border-white/20'
+                          }`}
+                        >
+                          {isRunning ? (
+                            <RefreshCw className="w-5 h-5 spin" />
+                          ) : (
+                            <Play className="w-5 h-5" />
+                          )}
+                          {isRunning ? 'Running...' : 'Run Code'}
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={handleSubmitCode}
+                          className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#00ffa3] to-[#00c9ff] text-black font-semibold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300"
+                        >
+                          <Send className="w-5 h-5" />
+                          Submit Solution
+                        </motion.button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </motion.div>
           </motion.div>
