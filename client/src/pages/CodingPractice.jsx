@@ -19,7 +19,6 @@ import {
 // ==================================================
 // SAMPLE QUESTIONS DATA
 // ==================================================
-// Each question object contains all necessary information for the coding practice
 const sampleQuestions = [
   {
     id: 1,
@@ -126,33 +125,25 @@ const CodingPractice = () => {
   const navigate = useNavigate();
 
   // ========== STATE MANAGEMENT ==========
-  // Filter states
   const [searchTerm, setSearchTerm] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState('All');
   const [topicFilter, setTopicFilter] = useState('All');
   
-  // UI states
   const [selectedQuestion, setSelectedQuestion] = useState(null);
   const [code, setCode] = useState('');
   const [showEditor, setShowEditor] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   
-  // Progress states
   const [solvedQuestions, setSolvedQuestions] = useState([]);
   const [dailyStreak, setDailyStreak] = useState(0);
   const [lastSolvedDate, setLastSolvedDate] = useState(null);
   const [totalCoins, setTotalCoins] = useState(0);
 
   // ========== LOCALSTORAGE INITIALIZATION ==========
-  // Load all saved data when component mounts
   useEffect(() => {
-    // Load solved questions
     const savedSolved = localStorage.getItem('codingSolvedQuestions');
-    if (savedSolved) {
-      setSolvedQuestions(JSON.parse(savedSolved));
-    }
+    if (savedSolved) setSolvedQuestions(JSON.parse(savedSolved));
     
-    // Load daily streak data
     const savedStreak = localStorage.getItem('codingDailyStreak');
     const savedLastDate = localStorage.getItem('codingLastSolvedDate');
     const savedCoins = localStorage.getItem('codingTotalCoins');
@@ -161,61 +152,44 @@ const CodingPractice = () => {
     if (savedLastDate) setLastSolvedDate(savedLastDate);
     if (savedCoins) setTotalCoins(parseInt(savedCoins));
     
-    // Check if streak should be reset (missed a day)
     checkAndUpdateStreak();
   }, []);
 
-  // Save solved questions to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('codingSolvedQuestions', JSON.stringify(solvedQuestions));
   }, [solvedQuestions]);
 
-  // Save streak and coins data
   useEffect(() => {
     localStorage.setItem('codingDailyStreak', dailyStreak.toString());
     localStorage.setItem('codingLastSolvedDate', lastSolvedDate || '');
     localStorage.setItem('codingTotalCoins', totalCoins.toString());
-    
-    // Also update dashboard coins in localStorage (for cross-page sync)
     localStorage.setItem('userCoins', totalCoins.toString());
   }, [dailyStreak, lastSolvedDate, totalCoins]);
 
   // ========== STREAK MANAGEMENT ==========
-  // Check if user solved a problem today vs yesterday
   const checkAndUpdateStreak = () => {
     const today = new Date().toDateString();
     if (lastSolvedDate !== today) {
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
-      
-      // If last solved was yesterday, streak continues
-      // If last solved was before yesterday, reset streak to 0
       if (lastSolvedDate !== yesterday.toDateString()) {
         setDailyStreak(0);
       }
     }
   };
 
-  // Update streak when solving a new problem
   const updateStreakOnSolve = () => {
     const today = new Date().toDateString();
-    
-    if (lastSolvedDate === today) {
-      // Already solved today, streak doesn't increase
-      return;
-    }
+    if (lastSolvedDate === today) return;
     
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     
     if (lastSolvedDate === yesterday.toDateString()) {
-      // Solved yesterday, increase streak
       setDailyStreak(prev => prev + 1);
     } else if (!lastSolvedDate) {
-      // First time solving
       setDailyStreak(1);
     } else {
-      // Missed days, reset streak
       setDailyStreak(1);
     }
     
@@ -223,7 +197,6 @@ const CodingPractice = () => {
   };
 
   // ========== REWARD SYSTEM ==========
-  // Award coins when problem is solved
   const awardCoins = () => {
     const COINS_PER_PROBLEM = 50;
     const newTotal = totalCoins + COINS_PER_PROBLEM;
@@ -232,102 +205,66 @@ const CodingPractice = () => {
   };
 
   // ========== FILTERING LOGIC ==========
-  // Filter questions based on search term, difficulty, and topic
   const getFilteredQuestions = () => {
     let filtered = sampleQuestions;
-    
-    // Search filter (by title)
     if (searchTerm) {
-      filtered = filtered.filter(q => 
+      filtered = filtered.filter(q =>
         q.title.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    
-    // Difficulty filter
     if (difficultyFilter !== 'All') {
       filtered = filtered.filter(q => q.difficulty === difficultyFilter);
     }
-    
-    // Topic filter
     if (topicFilter !== 'All') {
       filtered = filtered.filter(q => q.topic === topicFilter);
     }
-    
     return filtered;
   };
 
   // ========== QUESTION SOLVING LOGIC ==========
-  // Check if a question is already solved
-  const isQuestionSolved = (questionId) => {
-    return solvedQuestions.includes(questionId);
-  };
+  const isQuestionSolved = (questionId) => solvedQuestions.includes(questionId);
 
-  // Handle solve button click - opens the code editor
   const handleSolveClick = (question) => {
     setSelectedQuestion(question);
     setCode(question.starterCode);
     setShowEditor(true);
   };
 
-  // Handle code submission - validates and rewards
   const handleSubmitCode = () => {
-    // For demo purposes, we consider any non-empty code as "solved"
-    // In a real app, you'd run test cases against the code
     if (code.trim() && selectedQuestion) {
-      // Check if already solved
       if (!isQuestionSolved(selectedQuestion.id)) {
-        // Add to solved questions
         setSolvedQuestions([...solvedQuestions, selectedQuestion.id]);
-        
-        // Update streak
         updateStreakOnSolve();
-        
-        // Award coins
-        const newCoins = awardCoins();
-        
-        // Show success popup
+        awardCoins();
         setShowSuccessPopup(true);
-        
-        // Auto-hide popup after 3 seconds
-        setTimeout(() => {
-          setShowSuccessPopup(false);
-        }, 3000);
+        setTimeout(() => setShowSuccessPopup(false), 3000);
       }
-      
-      // Close editor after solving
       setShowEditor(false);
       setSelectedQuestion(null);
     }
   };
 
-  // Handle run code (test execution simulation)
   const handleRunCode = () => {
-    // Simulate code execution
     alert("Running code... (Demo: Check console for output)\nIn a production app, this would execute your code against test cases.");
   };
 
   // ========== PROGRESS STATISTICS ==========
-  // Calculate solved counts by difficulty
   const getProgressStats = () => {
     const easySolved = solvedQuestions.filter(id => {
       const q = sampleQuestions.find(q => q.id === id);
       return q && q.difficulty === 'Easy';
     }).length;
-    
     const mediumSolved = solvedQuestions.filter(id => {
       const q = sampleQuestions.find(q => q.id === id);
       return q && q.difficulty === 'Medium';
     }).length;
-    
     const hardSolved = solvedQuestions.filter(id => {
       const q = sampleQuestions.find(q => q.id === id);
       return q && q.difficulty === 'Hard';
     }).length;
-    
     const totalEasy = sampleQuestions.filter(q => q.difficulty === 'Easy').length;
     const totalMedium = sampleQuestions.filter(q => q.difficulty === 'Medium').length;
     const totalHard = sampleQuestions.filter(q => q.difficulty === 'Hard').length;
-    
     return {
       total: solvedQuestions.length,
       easy: { solved: easySolved, total: totalEasy },
@@ -339,10 +276,10 @@ const CodingPractice = () => {
   const stats = getProgressStats();
   const filteredQuestions = getFilteredQuestions();
 
-  // ========== RENDER COMPONENT ==========
+  // ========== RENDER ==========
   return (
     <div className="min-h-screen bg-[#060610]">
-      {/* Success Popup Animation */}
+      {/* Success Popup */}
       <AnimatePresence>
         {showSuccessPopup && (
           <motion.div
@@ -359,10 +296,9 @@ const CodingPractice = () => {
         )}
       </AnimatePresence>
 
-      {/* Main Content */}
       <div className="container mx-auto px-4 py-6 max-w-7xl">
-        
-        {/* ========== HEADER SECTION ========== */}
+
+        {/* ── Header ── */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <motion.button
@@ -380,27 +316,20 @@ const CodingPractice = () => {
               <p className="text-gray-400 mt-1">Practice DSA & coding interview problems</p>
             </div>
           </div>
-          
-          {/* Stats Cards */}
+
           <div className="flex gap-4">
-            <motion.div 
-              whileHover={{ scale: 1.05 }}
-              className="glass-card px-4 py-2 rounded-xl flex items-center gap-2"
-            >
+            <motion.div whileHover={{ scale: 1.05 }} className="glass-card px-4 py-2 rounded-xl flex items-center gap-2">
               <Flame className="w-5 h-5 text-orange-500" />
               <span className="text-white font-bold">{dailyStreak} day streak</span>
             </motion.div>
-            <motion.div 
-              whileHover={{ scale: 1.05 }}
-              className="glass-card px-4 py-2 rounded-xl flex items-center gap-2"
-            >
+            <motion.div whileHover={{ scale: 1.05 }} className="glass-card px-4 py-2 rounded-xl flex items-center gap-2">
               <Trophy className="w-5 h-5 text-yellow-500" />
               <span className="text-white font-bold">{totalCoins} coins</span>
             </motion.div>
           </div>
         </div>
 
-        {/* ========== PROGRESS SECTION ========== */}
+        {/* ── Progress ── */}
         <div className="glass-card rounded-2xl p-6 mb-8">
           <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
             <Brain className="w-5 h-5 text-[#00ffa3]" />
@@ -426,23 +355,25 @@ const CodingPractice = () => {
           </div>
         </div>
 
-        {/* ========== SEARCH & FILTERS ========== */}
+        {/* ── Search & Filters ── */}
         <div className="glass-card rounded-2xl p-6 mb-8">
-          {/* Search Bar */}
+          {/* FIX: Added id, name, and autoComplete to search input */}
           <div className="relative mb-6">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
+              id="question-search"
+              name="question-search"
               type="text"
               placeholder="Search coding questions by title..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              autoComplete="off"
               className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-[#00ffa3] transition-colors"
             />
           </div>
 
-          {/* Difficulty Filters */}
           <div className="mb-4">
-            <label className="text-sm text-gray-400 mb-2 block">Difficulty</label>
+            <label htmlFor="difficulty-filter" className="text-sm text-gray-400 mb-2 block">Difficulty</label>
             <div className="flex gap-2 flex-wrap">
               {['All', 'Easy', 'Medium', 'Hard'].map(diff => (
                 <motion.button
@@ -462,9 +393,8 @@ const CodingPractice = () => {
             </div>
           </div>
 
-          {/* Topic Filters */}
           <div>
-            <label className="text-sm text-gray-400 mb-2 block">Topics</label>
+            <label htmlFor="topic-filter" className="text-sm text-gray-400 mb-2 block">Topics</label>
             <div className="flex gap-2 flex-wrap">
               {['All', 'Arrays', 'Strings', 'Linked List', 'Trees', 'Graph', 'Dynamic Programming'].map(topic => (
                 <motion.button
@@ -485,7 +415,7 @@ const CodingPractice = () => {
           </div>
         </div>
 
-        {/* ========== QUESTIONS LIST ========== */}
+        {/* ── Questions List ── */}
         <div className="grid gap-4">
           <h2 className="text-xl font-semibold text-white mb-2">Problems</h2>
           {filteredQuestions.length === 0 ? (
@@ -540,7 +470,7 @@ const CodingPractice = () => {
         </div>
       </div>
 
-      {/* ========== CODE EDITOR MODAL ========== */}
+      {/* ── Code Editor Modal ── */}
       <AnimatePresence>
         {showEditor && selectedQuestion && (
           <motion.div
@@ -613,10 +543,16 @@ const CodingPractice = () => {
 
                 {/* Code Editor */}
                 <div>
-                  <h4 className="text-lg font-semibold text-white mb-2">Your Code</h4>
+                  <label htmlFor="code-editor" className="text-lg font-semibold text-white mb-2 block">
+                    Your Code
+                  </label>
+                  {/* FIX: Added id, name, and autoComplete to the code textarea */}
                   <textarea
+                    id="code-editor"
+                    name="code-editor"
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
+                    autoComplete="off"
                     className="w-full h-64 bg-[#1a1a2e] border border-white/10 rounded-xl p-4 text-white font-mono text-sm focus:outline-none focus:border-[#00ffa3]"
                     spellCheck={false}
                   />
@@ -652,7 +588,7 @@ const CodingPractice = () => {
   );
 };
 
-// Add glass-card CSS style to global or inline
+// Global glass-card style
 const style = document.createElement('style');
 style.textContent = `
   .glass-card {
