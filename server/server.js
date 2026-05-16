@@ -36,9 +36,8 @@ app.use(
   })
 );
 
-// FIX #4: Explicitly handle preflight OPTIONS requests for ALL routes
-// Without this, browsers' preflight checks fail silently
-app.options("*", cors());
+
+app.options("/{*any}", cors());
 
 /* ---------------- MIDDLEWARE ---------------- */
 app.use(express.json());
