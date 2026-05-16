@@ -98,7 +98,14 @@ const FEATURE_CATEGORIES = {
     { title: "Resume Builder", sub: "ATS-friendly & instant scoring", icon: <FileText size={20} />, route: "/resume-builder", accent: "#fbbf24", tag: "New", isNew: true, status: "live" },
   ],
   "💻 Coding & Technical": [
-    { title: "Coding Platform", sub: "500+ DSA problems · Online compiler", icon: <Code size={20} />, route: "/coding", accent: "#00c9ff", tag: "Coming Soon", status: "coming" },
+    {
+ title: "Coding Platform",
+ sub: "500+ DSA problems · Online compiler",
+ route: "/coding",
+ accent: "#00c9ff",
+ tag: "Live",
+ status: "live"
+}
     { title: "Technical Interview", sub: "System design · DBMS · OS", icon: <Video size={20} />, route: "/technical", accent: "#14b8a6", tag: "Coming Soon", status: "coming" },
     { title: "Company-Specific Prep", sub: "TCS · Infosys · Amazon · Google", icon: <Briefcase size={20} />, route: "/company-prep", accent: "#ec4899", tag: "Coming Soon", status: "coming" },
   ],

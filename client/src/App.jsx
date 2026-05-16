@@ -10,6 +10,7 @@ import ResumeBuilder from './pages/ResumeBuilder';
 import Subscription from './pages/Subscription';
 import Leaderboard from './pages/Leaderboard';
 import ErrorBoundary from "./components/ErrorBoundary";
+import CodingPractice from "./pages/CodingPractice";
 
 // Protected route component
 const ProtectedRoute = ({ children, requireAuth = true, requirePro = false }) => {
@@ -99,6 +100,12 @@ function App() {
           <Route path="/aptitude" element={
             <ProtectedRoute requireAuth={true}>
               <Aptitude />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/coding-practice" element={
+            <ProtectedRoute requireAuth={true}>
+              <CodingPractice />
             </ProtectedRoute>
           } />
           
